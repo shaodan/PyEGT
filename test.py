@@ -34,5 +34,28 @@ def test_len():
     print t1.timeit(1000)/1000
     print t2.timeit(1000)/1000
 
+def test_zeros():
+    t1 = timeit.Timer('np.zeros(10000)','import numpy as np')
+    t2 = timeit.Timer('a=np.empty(10000);a.fill(0)','import numpy as np')
 
-test_len()
+    a = np.zeros(10000,dtype=np.double)
+    b = np.empty(10000)
+    b.fill(0)
+    print type(a[0]),type(b[0])
+    print t1.timeit(1000)/1000
+    print t2.timeit(1000)/1000
+
+def test_ref(alist, blist):
+    alist = blist/2
+    print alist,blist
+
+# test_random()
+# test_sum
+# test_len()
+# test_zeros()
+
+alist = np.ones(10,dtype=int)
+blist = np.random.randint(10,size=10)
+print alist, blist
+test_ref(alist, blist)
+print alist, blist
