@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 
 #参数设定
 N  = 1000              # 网络规模
-K = 10000            # 演化循环
-C = 10                   # 平均出度
+K = 100000            # 演化循环
+C = 2                  # 平均出度
 cycle = 1000             # 更新周期
-m_rate = 0.05      # 
+m_rate = 0.05      # 突变概率
+strengh = 0.2      # 选择强度
 
 #生成网络
 # network = nx.davis_southern_women_graph()
@@ -39,6 +40,7 @@ def pdg(G, s, fitness, anchor):
     
     if not isinstance(anchor, int):
          # 第一次，计算所有节点的收益
+        fitness.fill(0)
         for edge in G.edges_iter():
             a = edge[0]
             b = edge[1]
@@ -60,28 +62,27 @@ def pdg(G, s, fitness, anchor):
     else:
         # 节点策略没有变化
         pass
-    return fitness
-        
-
 def BD(G, fitness):
     # N = fitness.size
     p = fitness / fitness.sum()
+    # p = fitness * strengh + 1
+    # p = p / p.sum()
     birth = np.random.choice(N,replace=False,p=p)
     neigh = G.neighbors(birth)
-    death = np.random.choice(neigh)
+    death = np.random.choice(neigh,replace=False)
     return birth, death
 
 def DB(G, fitness):
     # N = fitness.size
     death = np.random.randint(N)
     neigh = G.neighbors(death)
-    p = fitness[neigh]
+    p = fitness[neigh] * strengh + 1
     p = p / p.sum()
     birth = np.random.choice(neigh,replace=False,p=p)
     return birth, death
 
 # Main process
-fitness = np.zeros(N, dtype=np.double)
+fitness = np.empty(N, dtype=np.double)
 # fitness = [0] * N
 death = None
 for i in xrange(K):
