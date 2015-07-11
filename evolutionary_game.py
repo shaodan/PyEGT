@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 #~ import game
 
 #参数设定
-N  = 100              # 网络规模
+N  = 10              # 网络规模
 K = 10000            # 演化循环
 C = 5                   # 平均出度
 cycle = 1000             # 更新周期
@@ -35,45 +35,27 @@ record = np.zeros((S,K), dtype=np.int)
 r_s = [0] * K
 
 R_p = 1;T_p = 1.5;S_p = 0;P_p = 0.1
-payoff_matrix = np.array([[(R_p, R_p), (T_p, S_p)], [(S_p,T_p), (P_p,P_p)]], dtype=np.double)
+payoff_matrix = np.array([[(R_p, R_p), (S_p, T_p)], [(T_p,S_p), (P_p,P_p)]], dtype=np.double)
 
 
-# TODO: s是int类型的，fitness是list，anchor是int
+# todo: s是int类型的，fitness是list，anchor是int
 def pdg(G, s, fitness, anchor):
     # R = 1;T = 1.5;S = 0;P = 0.1
     # payoff_matrix = np.array([[R, T], [S, P]], dtype=np.double)
-    
-    if not isinstance(anchor, int):
-         # 第一次，计算所有节点的收益
-        for edge in G.edges_iter():
-            a = edge[0]
-            b = edge[1]
-            p = payoff_matrix[s[a]][s[b]]
-            fitness[a] += p[0]
-            fitness[b] += p[1]
-    elif anchor>=0 :    
-        # 只用计算新节点和其邻居节点的收益
-        f = 0 # 新节点收益从0计算
-        neigh_iter = G.neighbors_iter(anchor)
-        for neigh in neigh_iter:
-            p = payoff_matrix[s[anchor]][s[neigh]]
-            f += p[0]           # 新节点累加
-            new_payoff = p[1]   # 邻居节点计算新的收益
-            p = payoff_matrix[1-s[anchor]][s[neigh]]
-            old_payoff = p[1]   # 邻居节点计算原来的收益
-            fitness[neigh] += new_payoff - old_payoff
-        fitness[anchor] = f
-    else:
-        # 节点策略没有变化
-        pass
+    fitness.fill(0)
+    for edge in G.edges_iter():
+        a = edge[0]
+        b = edge[1]
+        p = payoff_matrix[s[a]][s[b]]
+        fitness[a] += p[0]
+        fitness[b] += p[1]
     return fitness
-        
 
 def BD(G, fitness):
     # N = fitness.size
-    p = fitness / float(fitness.sum())
+    p = fitness / fitness.sum()
     birth = np.random.choice(N, replace=False,p=p)
-    neigh = G.neighbors(int(birth))
+    neigh = G.neighbors(birth)
     death = np.random.choice(neigh)
     return birth, death
 
@@ -85,9 +67,9 @@ def DB(G, fitness):
         print "==========A=========="
         print death
         print neigh
-        exit()
+        return death, death
     p = fitness[neigh]
-    p = p / float(p.sum())
+    p = p / p.sum()
     if ((p<0).sum() > 0 ):
         print "==========B=========="
         print death
@@ -99,6 +81,7 @@ def DB(G, fitness):
     return birth, death
         
 def rewire(G, s_e, anchor):
+    change_list = [anchor]
     if anchor==None:
         pass
     else:
@@ -124,12 +107,10 @@ def rewire(G, s_e, anchor):
 
 
 # Main process
-fitness = np.zeros(N, dtype=np.float)
-# fitness = [0] * N
+fitness = np.empty(N, dtype=np.double)
 death = None
 for i in xrange(K):
     # 根据网络结构进行博弈
-    print death
     pdg(network, s, fitness, death)
     # fitness = pgg(network, s)
 
@@ -167,8 +148,8 @@ for i in xrange(K):
     if flag :
         death = -1
 
-    if i%cycle == 0:
-        print('turn:'+str(i))
+    if (i+1)%cycle == 0:
+        print('turn:'+str(i+1))
 
 
 plt.figure()
