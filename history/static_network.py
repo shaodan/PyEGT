@@ -108,10 +108,12 @@ def pgg(G, s, fitness, anchor=None):
         # 节点策略没有变化
         pass
 
-# from timeit import Timer
-# t1=Timer("pgg(G,s,fitness,None)","from __main__ import pgg,pdg;N=1000;import networkx as nx;import numpy as np;G=nx.random_regular_graph(5, N);fitness=np.empty(N, dtype=np.double);s = np.random.randint(2, size=N)")
-# print t1.timeit(300)/300
-# exit()
+from timeit import Timer
+t1=Timer("pgg(G,s,fitness,None)","from __main__ import pgg,pdg;"+
+    "N=1000;import networkx as nx;import numpy as np;G=nx.random_regular_graph(5, N);"+
+    "fitness=np.empty(N, dtype=np.double);s = np.random.randint(2, size=N)")
+print t1.timeit(300)/300
+exit()
 
 def BD(G, fitness):
     # N = fitness.size
