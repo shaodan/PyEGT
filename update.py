@@ -34,10 +34,18 @@ class DeathBirth(Update):
         G=self.graph
         fitness = self.fitness
         N = self.N
+        
         death = np.random.randint(N)
         neigh = G.neighbors(death)
+        if (len(neigh) == 0):
+            print "==========A=========="
+            print death
+            return death, death
         p = fitness[neigh]
-        p = p / p.sum()
+        if p.sum() == 0:
+            p = None
+        else:
+            p = p / p.sum()
         birth = np.random.choice(neigh,replace=False,p=p)
         return birth, death
 
