@@ -4,9 +4,6 @@ import numpy as np
 import networkx as nx
 
 class Update:
-    def __init__(self):
-        self.graph = None
-        self.fitness = None
 
     def set_graph(self, graph):
         self.graph = graph
@@ -30,6 +27,7 @@ class BirthDeath(Update):
         return birth, death
 
 class DeathBirth(Update):
+
     def update(self):
         G=self.graph
         fitness = self.fitness
@@ -52,7 +50,7 @@ class DeathBirth(Update):
 if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)
     fitness = np.random.randint(1,3, size=100) * 1.0
-    bd  = BirthDeath()
+    bd = BirthDeath()
     bd.set_graph(G)
     bd.set_fitness(fitness)
     A= bd.update()

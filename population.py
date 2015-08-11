@@ -21,13 +21,10 @@ class Population:
         update.set_graph(graph)
         update.set_fitness(self.fitness)
         self.update = update
-        # self.S = update.size
-        # self.evolve_strategies = np.random.randint(S, size=N)
 
     def evolve(self, turns, cycle=None):
         # 演化记录
         self.cop = [0] * turns
-        # self.elv = np.zeros((self.S,turns), dtype=np.int)
         # 输出间隔
         if cycle == None:
             cycle = turns/100;
@@ -39,15 +36,43 @@ class Population:
 
             if (np.random.random() > 0.01) :
                 new_s = self.strategies[birth]
-                # new_s_e = self.evolve_strategies[birth]
             else:
                 new_s = np.random.randint(2)
-                # new_s_e = np.random.randint(self.S)
 
             self.strategies[death] = new_s
             
             # 可以优化，通过r_s[i-1]直接计算
-            self.cop[i]= (self.strategies==1).sum()
+            self.cop[i]= (self.strategies==0).sum()
+
+            if (i+1)%cycle == 0:
+                print('turn:'+str(i+1))
+
+    def coevolve(self, turns, coevlv, cycle=None):
+        # 演化记录
+        self.cop = [0] * turns
+        self.S = coevlv.strategies.size
+        self.elv = np.zeros((self.S,turns), dtype=np.int)
+        self.evolve_strategies = np.random.randint(S, size=N)
+        # 输出间隔
+        if cycle == None:
+            cycle = turns/100;
+        # 循环
+        death = None
+        for i in xrange(turns):
+            self.game.interact()
+            (birth,death) = self.update.update()
+
+            if (np.random.random() > 0.01) :
+                new_s = self.strategies[birth]
+                new_s_e = self.evolve_strategies[birth]
+            else:
+                new_s = np.random.randint(2)
+                new_s_e = np.random.randint(self.S)
+
+            self.strategies[death] = new_s
+            
+            # 可以优化，通过r_s[i-1]直接计算
+            self.cop[i]= (self.strategies==0).sum()
             # for m in xrange(S):
             #     record[m][i] = (s_e==m).sum()
 
