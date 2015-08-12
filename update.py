@@ -4,21 +4,18 @@ import numpy as np
 import networkx as nx
 
 class Update:
+    def __init__(self):
+        pass
 
-    def set_graph(self, graph):
-        self.graph = graph
-        self.N = len(graph)
-
-    def set_fitness(self, fitness):
-        self.fitness = fitness
-
+    # 策略更新过程，必须继承
+    # G网络结构，fitness收益数组
+    def update(self, G, fitness):
+        pass
 
 class BirthDeath(Update):
     
-    def update(self):
-        G=self.graph
-        fitness = self.fitness
-        N = self.N
+    def update(self, G, fitness):
+        N = len(fitness)
 
         p = fitness / fitness.sum()
         birth = np.random.choice(N, replace=False, p=p)
@@ -28,10 +25,8 @@ class BirthDeath(Update):
 
 class DeathBirth(Update):
 
-    def update(self):
-        G=self.graph
-        fitness = self.fitness
-        N = self.N
+    def update(self, G, fitness):
+        N = len(fitness)
         
         death = np.random.randint(N)
         neigh = G.neighbors(death)
@@ -51,7 +46,5 @@ if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)
     fitness = np.random.randint(1,3, size=100) * 1.0
     bd = BirthDeath()
-    bd.set_graph(G)
-    bd.set_fitness(fitness)
-    A= bd.update()
+    A= bd.update(G, fitness)
     print(A)

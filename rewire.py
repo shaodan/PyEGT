@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+import networkx as nx
+
 class Rewire
     
     def rewire(G, s_e, anchor):
@@ -28,3 +31,7 @@ class Rewire
                 # if node >= anchor:
                 #     node += 1
                 G.add_edge(anchor, node)
+
+if __name__ == '__main__':
+    G = nx.random_regular_graph(5, 100)
+    fitness = np.random.randint(1,3, size=100) * 1.0

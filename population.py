@@ -9,20 +9,15 @@ import game
 
 
 class Population:
-    def __init__(self, graph, game, update):
+    def __init__(self, graph):
         self.graph = graph
         self.N = len(graph)
+        # 需要记录收益数组、策略数组
         self.fitness = np.empty(self.N, dtype=np.double)
         self.strategies = np.random.randint(2, size=self.N)
-        game.set_graph(graph)
-        game.set_strategies(self.strategies)
-        game.set_fitness(self.fitness)
-        self.game = game
-        update.set_graph(graph)
-        update.set_fitness(self.fitness)
-        self.update = update
 
-    def evolve(self, turns, cycle=None):
+    # 演化过程：game博弈类型、update更新规则、turns迭代轮数、cycle提示轮数
+    def evolve(self, game, update, turns, cycle=None):
         # 演化记录
         self.cop = [0] * turns
         # 输出间隔
@@ -31,8 +26,8 @@ class Population:
         # 循环
         death = None
         for i in xrange(turns):
-            self.game.interact()
-            (birth,death) = self.update.update()
+            game.interact(self.graph, self.strategies, self.fitness)
+            (birth,death) = update.update(self.graph, self.fitness)
 
             if (np.random.random() > 0.01) :
                 new_s = self.strategies[birth]
@@ -41,13 +36,17 @@ class Population:
 
             self.strategies[death] = new_s
             
-            # 可以优化，通过r_s[i-1]直接计算
-            self.cop[i]= (self.strategies==0).sum()
+            # 统计绘图
+            if i == 0:
+                self.cop[0]= (self.strategies==0).sum()
+            else:
+                self.cop[i] = self.cop[i-1] + 1 - 2*new_s
 
             if (i+1)%cycle == 0:
                 print('turn:'+str(i+1))
 
-    def coevolve(self, turns, coevlv, cycle=None):
+    # 共演过程：game博弈类型、update更新规则、coevolv共演规则, turns迭代轮数、cycle提示轮数
+    def coevolve(self, game, update, coevlv, turns, cycle=None):
         # 演化记录
         self.cop = [0] * turns
         self.S = coevlv.strategies.size
@@ -59,20 +58,23 @@ class Population:
         # 循环
         death = None
         for i in xrange(turns):
-            self.game.interact()
-            (birth,death) = self.update.update()
+            game.interact(self.graph, self.strategies, self.fitness)
+            (birth,death) = update.update(self.graph, self.fitness)
 
             if (np.random.random() > 0.01) :
                 new_s = self.strategies[birth]
-                new_s_e = self.evolve_strategies[birth]
+                # new_s_e = self.evolve_strategies[birth]
             else:
                 new_s = np.random.randint(2)
-                new_s_e = np.random.randint(self.S)
+                # new_s_e = np.random.randint(self.S)
 
             self.strategies[death] = new_s
             
-            # 可以优化，通过r_s[i-1]直接计算
-            self.cop[i]= (self.strategies==0).sum()
+            # 统计绘图
+            if i == 0:
+                self.cop[0]= (self.strategies==0).sum()
+            else:
+                self.cop[i] = self.cop[i-1] + 1 - 2*new_s
             # for m in xrange(S):
             #     record[m][i] = (s_e==m).sum()
 
@@ -100,5 +102,5 @@ if __name__ == "main":
     G = nx.random_regular_graph(5, 10)
     g = game.PDG()
     u = update.BD()
-    p = Population(G, g, u)
-    p.evolve(10000)
+    p = Population(G)
+    p.evolve(g,u,10000)
