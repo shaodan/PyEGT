@@ -5,10 +5,10 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-import population, update, game
+import population, update, game, rewire
 
 ## 生成网络
-# G = ba(N, 5, 3, 1);
+# G = ba(N, 5, 3, 1)
 # G = nx.davis_southern_women_graph()
 # G = nx.random_regular_graph(5, 1000)
 G = nx.random_graphs.barabasi_albert_graph(100,5,3)
@@ -23,5 +23,10 @@ u = update.DeathBirth()
 
 ## 演化
 p = population.Population(G)
-p.evolve(g, u, 100, 10)
+# p.evolve(g, u, 100, 10)
+## 共演
+r = rewire.Rewire(3)
+p.coevolve(g, u, r, 1000, 100)
+
+## 画图
 p.show()

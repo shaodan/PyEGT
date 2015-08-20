@@ -3,16 +3,26 @@
 import numpy as np
 import networkx as nx
 
-class Rewire
+class Coevlv:
+    def __init__(self, S):
+        self.S = S
+        self.N = None
+
+    def rewire(self, G, s_e, anchor):
+        pass
+
+class Rewire(Coevlv):
     
-    def rewire(G, s_e, anchor):
+    def rewire(self, G, s_e, anchor):
+        if self.N == None:
+            self.N = len(G)
         change_list = [anchor]
         if anchor==None:
             pass
         else:
             k = G.degree(anchor)
             if s_e==0:   # 随机选择
-                p = np.ones(N)
+                p = np.ones(self.N)
             elif s_e==1: # 度优先
                 p = np.array(G.degree().values(),dtype=np.float64)
             elif s_e==2: # 相似度
@@ -25,7 +35,7 @@ class Rewire
                 pass
             p[anchor] = 0
             p = p / float(p.sum())
-            new_neigh = np.random.choice(N,k,replace=False,p=p)
+            new_neigh = np.random.choice(self.N,k,replace=False,p=p)
             G.remove_edges_from(G.edges(anchor))
             for node in new_neigh:
                 # if node >= anchor:
