@@ -5,6 +5,7 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.interpolate import spline
 import game
 
 
@@ -14,6 +15,7 @@ class Population:
         self.N = len(graph)
         # 需要记录收益数组、策略数组
         self.fitness = np.empty(self.N, dtype=np.double)
+        # 0合作， 1背叛
         self.strategies = np.random.randint(2, size=self.N)
         self.S = None
 
@@ -34,14 +36,15 @@ class Population:
                 new_s = self.strategies[birth]
             else:
                 new_s = np.random.randint(2)
-
-            self.strategies[death] = new_s
             
             # 统计绘图
             if i == 0:
                 self.rec[0]= (self.strategies==0).sum()
             else:
-                self.rec[i] = self.rec[i-1] + 1 - 2*new_s
+                self.rec[i] = self.rec[i-1] + self.strategies[death] - new_s 
+
+            # 更新策略
+            self.strategies[death] = new_s
 
             if (i+1)%cycle == 0:
                 print('turn:'+str(i+1))
@@ -55,7 +58,9 @@ class Population:
         self.evolve_strategies = np.random.randint(self.S, size=self.N)
         # 输出间隔
         if cycle == None:
-            cycle = turns/100;
+            cycle = turns/10
+            if cycle < 1:
+                cycle = 10
         # 循环
         death = None
         for i in xrange(turns):
@@ -68,17 +73,18 @@ class Population:
             else:
                 new_s = np.random.randint(2)
                 new_s_e = np.random.randint(self.S)
-
-            self.strategies[death] = new_s
-            self.evolve_strategies[death] = new_s_e
             
             # 统计绘图
             if i == 0:
                 self.rec[0]= (self.strategies==0).sum()
             else:
-                self.rec[i] = self.rec[i-1] + 1 - 2*new_s
+                self.rec[i] = self.rec[i-1] + self.strategies[death] - new_s 
             for m in xrange(self.S):
                 self.evl[m][i] = (self.evolve_strategies==m).sum()
+
+            # 更新策略
+            self.strategies[death] = new_s
+            self.evolve_strategies[death] = new_s_e
 
             coevlv.rewire(self.graph, self.evolve_strategies[death], death)
 
@@ -88,6 +94,10 @@ class Population:
     def show(self):
         plt.figure(1)
         plt.plot(self.rec)
+        # x_old = range(len(self.rec))
+        # x = np.linspace(x_old[0],x_old[-1],300)
+        # y = spline(x_old,self.rec,x)
+        # plt.plot(x,y)
         plt.title('Evolutionary Game')
         plt.xlabel('Step');
         plt.ylabel('Cooperation Ratio');
@@ -98,7 +108,7 @@ class Population:
             # symb = '.ox+*sdph'
             label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
             for i in xrange(self.S):
-                plt.plot(self.evl[:][i],color[i], label=label[i])
+                plt.plot(self.evl[:][i], color[i], label=label[i])
             plt.title('Coevolutionary Game')
             plt.xlabel('Step')
             plt.ylabel('Strategies')
