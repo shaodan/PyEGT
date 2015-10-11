@@ -10,9 +10,14 @@ class Game:
         pass
 
     # 博弈过程，必须继承
-    # G是网络结构、s是个体策略、fitness是收益值（作为返回）
-    def interact(self, G, s, fitness):
+    def interact(self):
         pass
+
+    # graph是网络结构、strategies是个体策略、fitness是收益值（作为返回）
+    def set_param(self, graph, strategies, fitness):
+        self.graph = graph
+        self.strategies = strategies
+        self.fitness = fitness
 
 class PGG(Game):
     name = "public_goods_game"
@@ -21,7 +26,10 @@ class PGG(Game):
         # 获利倍数
         self.r = r
 
-    def interact(self, G, s, fitness):
+    def interact(self):
+        G = self.graph
+        s = self.strategies
+        fitness = self.fitness
         # 可能会有负的fitness
         fitness.fill(0)
         # 第一种每个group投入1
@@ -51,9 +59,11 @@ class PDG(Game):
     def __init__(self, r=1, t=1.5, s=0, p=0.1):
         self.payoff = np.array([[(r,r), (s,t)], [(t,s), (p,p)]], dtype=np.double)
 
-    def interact(self, G, s, fitness):
+    def interact(self):
+        s = self.strategies
+        fitness = self.fitness
         fitness.fill(0)
-        for edge in G.edges_iter():
+        for edge in self.graph.edges_iter():
             a = edge[0]
             b = edge[1]
             p = self.payoff[s[a]][s[b]]
@@ -63,10 +73,11 @@ class PDG(Game):
 class RPG(Game):
     name = "Rational Player Game"
 
-    def __init__(self, ):
+    def __init__(self, ration):
+        self.ration = ration
         pass
 
-    def interact(self, G, s, fitness):
+    def interact(self):
         pass
 
 
@@ -77,5 +88,6 @@ if __name__ == '__main__':
     G = nx.random_regular_graph(5, 10)
     s = np.random.randint(2, size=10)
     fitness = np.empty(10)
-    g.interact(G,s,fitness)
+    g.set_param(G, s, fitness)
+    g.interact()
     print fitness

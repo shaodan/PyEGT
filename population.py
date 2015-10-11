@@ -10,14 +10,25 @@ import game
 
 
 class Population:
-    def __init__(self, graph):
+    def set_graph(self, graph):
         self.graph = graph
         self.N = len(graph)
         # 需要记录收益数组、策略数组
         self.fitness = np.empty(self.N, dtype=np.double)
+
+    def set_game(self, game):
+        self.game = game
         # 0合作， 1背叛
         self.strategies = np.random.randint(2, size=self.N)
         self.S = None
+
+    def __init__(self, graph):
+        self.set_graph(graph)
+        self.set_game(None)
+
+    # def __init__(self, graph, game):
+    #     self.set_graph(graph)
+    #     self.set_game(game)
 
     # 演化过程：game博弈类型、update更新规则、turns迭代轮数、cycle提示轮数
     def evolve(self, game, update, turns, cycle=None):
@@ -28,20 +39,22 @@ class Population:
             cycle = turns/100
         # 循环
         death = None
+        update.set_param(self.graph, self.fitness)
+        game.set_param(self.graph, self.strategies, self.fitness)
         for i in xrange(turns):
-            game.interact(self.graph, self.strategies, self.fitness)
-            (birth,death) = update.update(self.graph, self.fitness)
+            game.interact()
+            (birth,death) = update.update()
 
             if (np.random.random() > 0.01) :
                 new_s = self.strategies[birth]
             else:
                 new_s = np.random.randint(2)
-            
+
             # 统计绘图
             if i == 0:
                 self.rec[0]= (self.strategies==0).sum()
             else:
-                self.rec[i] = self.rec[i-1] + self.strategies[death] - new_s 
+                self.rec[i] = self.rec[i-1] + self.strategies[death] - new_s
 
             # 更新策略
             self.strategies[death] = new_s
@@ -63,9 +76,10 @@ class Population:
                 cycle = 10
         # 循环
         death = None
+        update.set_graph(self.graph, self.fitness)
         for i in xrange(turns):
             game.interact(self.graph, self.strategies, self.fitness)
-            (birth,death) = update.update(self.graph, self.fitness)
+            (birth,death) = update.update()
 
             if (np.random.random() > 0.01) :
                 new_s = self.strategies[birth]
@@ -73,12 +87,12 @@ class Population:
             else:
                 new_s = np.random.randint(2)
                 new_s_e = np.random.randint(self.S)
-            
+
             # 统计绘图
             if i == 0:
                 self.rec[0]= (self.strategies==0).sum()
             else:
-                self.rec[i] = self.rec[i-1] + self.strategies[death] - new_s 
+                self.rec[i] = self.rec[i-1] + self.strategies[death] - new_s
             for m in xrange(self.S):
                 self.evl[m][i] = (self.evolve_strategies==m).sum()
 

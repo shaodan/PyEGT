@@ -12,7 +12,7 @@ class Coevlv:
         pass
 
 class Rewire(Coevlv):
-    
+
     def rewire(self, G, s_e, anchor):
         if self.N == None:
             self.N = len(G)

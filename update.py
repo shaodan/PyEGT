@@ -9,32 +9,32 @@ class Update:
 
     # 策略更新过程，必须继承
     # G网络结构，fitness收益数组
-    def update(self, G, fitness):
+    def update(self):
         pass
 
-class BirthDeath(Update):
-    
-    def update(self, G, fitness):
-        N = len(fitness)
+    def set_param(self, graph, fitness):
+        self.graph = graph
+        self.N = len(graph)
+        self.fitness = fitness
 
-        p = fitness / fitness.sum()
-        birth = np.random.choice(N, replace=False, p=p)
-        neigh = G.neighbors(birth)
+class BirthDeath(Update):
+
+    def update(self):
+        p = self.fitness / self.fitness.sum()
+        birth = np.random.choice(self.N, replace=False, p=p)
+        neigh = self.graph.neighbors(birth)
         death = np.random.choice(neigh,replace=False)
         return birth, death
 
 class DeathBirth(Update):
 
-    def update(self, G, fitness):
-        N = len(fitness)
-        
-        death = np.random.randint(N)
-        neigh = G.neighbors(death)
+    def update(self):
+        death = np.random.randint(self.N)
+        neigh = self.graph.neighbors(death)
         if (len(neigh) == 0):
-            print "==========A=========="
-            print death
+            print "==========no neigh for node:"+death+"=========="
             return death, death
-        p = fitness[neigh]
+        p = self.fitness[neigh]
         if p.sum() == 0:
             p = None
         else:
@@ -42,9 +42,17 @@ class DeathBirth(Update):
         birth = np.random.choice(neigh,replace=False,p=p)
         return birth, death
 
+class MineUpdate(Update):
+
+    def update(self):
+        birth = 0
+        death = 0
+        return birth, death
+
 if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)
     fitness = np.random.randint(1,3, size=100) * 1.0
     bd = BirthDeath()
-    A= bd.update(G, fitness)
+    bd.set_param(G, fitness)
+    A = bd.update()
     print(A)
