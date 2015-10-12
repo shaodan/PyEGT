@@ -11,7 +11,23 @@ class Coevlv:
     def rewire(self, G, s_e, anchor):
         pass
 
+    def draw(self):
+        plt.figure(2)
+        for i in xrange(self.S):
+            plt.plot(self.evl[:][i], self.color[i], label=self.label[i])
+        plt.title('Coevolutionary Game')
+        plt.xlabel('Step')
+        plt.ylabel('Strategies')
+        plt.legend()
+
 class Rewire(Coevlv):
+
+    def __init__(self, S):
+        super(S)
+        self.color = 'brgcmykw'
+        # self.symb = '.ox+*sdph'
+        self.label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
+
 
     def rewire(self, G, s_e, anchor):
         if self.N == None:

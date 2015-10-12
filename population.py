@@ -22,9 +22,10 @@ class Population:
         self.strategies = np.random.randint(2, size=self.N)
         self.S = None
 
-    def __init__(self, graph):
+    def __init__(self, graph, mutation=False):
         self.set_graph(graph)
         self.set_game(None)
+        self.mutation = muataion
 
     # def __init__(self, graph, game):
     #     self.set_graph(graph)

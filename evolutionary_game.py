@@ -11,7 +11,7 @@ import population, update, game, rewire
 # G = ba(N, 5, 3, 1)
 # G = nx.davis_southern_women_graph()
 # G = nx.random_regular_graph(5, 1000)
-# G = nx.grid_2d_graph(4,4)
+# G = nx.convert_node_labels_to_integers(nx.grid_2d_graph(10,10))
 # G = nx.star_graph(10)
 G = nx.random_graphs.barabasi_albert_graph(100,5,3)
 
