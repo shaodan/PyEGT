@@ -23,7 +23,7 @@ class Coevlv:
 class Rewire(Coevlv):
 
     def __init__(self, S):
-        super(S)
+        super(S, self).__init__()
         self.color = 'brgcmykw'
         # self.symb = '.ox+*sdph'
         self.label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
