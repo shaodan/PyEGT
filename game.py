@@ -3,11 +3,12 @@ import numpy as np
 import networkx as nx
 
 class Game:
-    '''base class of game'''
     name = "base_game"
 
-    def __init__(self, r=3):
-        pass
+    def __init__(self):
+        self.graph = None
+        self.strategies = None
+        self.fitness = None
 
     # 博弈过程，必须继承
     def interact(self):
@@ -27,21 +28,18 @@ class PGG(Game):
         self.r = r
 
     def interact(self):
-        G = self.graph
-        s = self.strategies
-        fitness = self.fitness
         # 可能会有负的fitness
-        fitness.fill(0)
+        self.fitness.fill(0)
         # 第一种每个group投入1
-        degrees = np.array(G.degree().values())
-        for node in G.nodes_iter():
+        degrees = np.array(self.graph.degree().values())
+        for node in self.graph.nodes_iter():
             degree = degrees[node]
-            fitness[node] += (s[node] - 1) * (degree+1)
-            neighs = G.neighbors(node)
+            fitness[node] += (self.strategies[node] - 1) * (degree+1)
+            neighs = self.graph.neighbors(node)
             neighs.append(node)
-            b = self.r * (s[neighs]==0).sum() / float(degree+1)
+            b = self.r * (self.strategies[neighs] == 0).sum() / float(degree+1)
             for neigh in neighs:
-                fitness[neigh] += b
+                self.fitness[neigh] += b
         # 第二种每个group投入1/(k+1)
         # degrees = np.array(G.degree().values())
         # inv = (1.0-s) / (degrees)
@@ -57,18 +55,16 @@ class PDG(Game):
     name = "prisoner's_dilemma_game"
 
     def __init__(self, r=1, t=1.5, s=0, p=0.1):
-        self.payoff = np.array([[(r,r), (s,t)], [(t,s), (p,p)]], dtype=np.double)
+        self.payoff = np.array([[(r, r), (s, t)], [(t, s), (p, p)]], dtype=np.double)
 
     def interact(self):
-        s = self.strategies
-        fitness = self.fitness
-        fitness.fill(0)
+        self.fitness.fill(0)
         for edge in self.graph.edges_iter():
             a = edge[0]
             b = edge[1]
-            p = self.payoff[s[a]][s[b]]
-            fitness[a] += p[0]
-            fitness[b] += p[1]
+            p = self.payoff[self.strategies[a]][self.strategies[b]]
+            self.fitness[a] += p[0]
+            self.fitness[b] += p[1]
 
 class RPG(Game):
     name = "Rational Player Game"

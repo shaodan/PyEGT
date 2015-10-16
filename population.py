@@ -25,7 +25,7 @@ class Population:
     def __init__(self, graph, mutation=False):
         self.set_graph(graph)
         self.set_game(None)
-        self.mutation = muataion
+        self.mutation = mutation
 
     # def __init__(self, graph, game):
     #     self.set_graph(graph)
@@ -114,8 +114,8 @@ class Population:
         # y = spline(x_old,self.rec,x)
         # plt.plot(x,y)
         plt.title('Evolutionary Game')
-        plt.xlabel('Step');
-        plt.ylabel('Cooperation Ratio');
+        plt.xlabel('Step')
+        plt.ylabel('Cooperation Ratio')
 
         if self.S != None:
             plt.figure(2)
