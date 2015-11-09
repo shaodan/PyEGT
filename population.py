@@ -138,4 +138,4 @@ if __name__ == "main":
     g = game.PDG()
     u = update.BD()
     p = Population(G)
-    p.evolve(g,u,10000)
+    p.evolve(g, u, 10000)

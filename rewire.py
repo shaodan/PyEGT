@@ -9,7 +9,7 @@ class Coevlv:
         self.S = S
         self.N = None
 
-    def rewire(self, G, s_e, anchor):
+    def rewire(self, graph , s_e, anchor):
         pass
 
     def draw(self):
@@ -39,9 +39,10 @@ class Rewire(Coevlv):
             if s_e == 0:    # 随机选择
                 p = np.ones(self.N)
             elif s_e == 1:  # 度优先
-                p = np.array(G.degree().values(),dtype=np.float64)
+                p = np.array(G.degree().values(), dtype=np.float64)
             elif s_e == 2:  # 相似度
-                p = np.array([len(list(nx.common_neighbors(G,anchor,x))) for x in G.nodes_iter()],dtype=np.float64)
+                p = np.array([len(list(nx.common_neighbors(G, anchor, x)))
+                              for x in G.nodes_iter()], dtype=np.float64)
                 # 防止没有足够公共节点的
                 p += 1
             elif s_e == 3:
@@ -50,7 +51,7 @@ class Rewire(Coevlv):
                 pass
             p[anchor] = 0
             p /= float(p.sum())
-            new_neigh = np.random.choice(self.N,k,replace=False,p=p)
+            new_neigh = np.random.choice(self.N, k, replace=False, p=p)
             G.remove_edges_from(G.edges(anchor))
             for node in new_neigh:
                 # if node >= anchor:

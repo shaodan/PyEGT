@@ -14,7 +14,9 @@ import rewire
 # G = nx.random_regular_graph(5, 1000)
 # G = nx.convert_node_labels_to_integers(nx.grid_2d_graph(10,10))
 # G = nx.star_graph(10)
-G = nx.random_graphs.barabasi_albert_graph(1000,5,3)
+# G = nx.random_graphs.barabasi_albert_graph(1000, 5, 3)
+douban = nx.read_edgelist('dataset/ASU/Douban-dataset/data/edges.csv', delimiter=',', nodetype=int, data=False)
+G = nx.relabel_nodes(douban, {len(douban): 0}, copy=False)
 
 # 网络结构绘图
 # pos=nx.spring_layout(G)
