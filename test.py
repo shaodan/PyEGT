@@ -49,13 +49,18 @@ def test_ref(alist, blist):
     alist = blist/2
     print alist,blist
 
+def test_read_graph_data():
+    douban = nx.read_edgelist('/media/shaodan/Work/ShaoDan/DataSets/ASU/Douban-dataset/data/edges.csv', delimiter=',', nodetype=int, data=False)
+    print(nx.number_of_nodes(douban), nx.number_of_edges(douban))
+
 # test_random()
 # test_sum
 # test_len()
 # test_zeros()
+test_read_graph_data()
 
-alist = np.ones(10,dtype=int)
-blist = np.random.randint(10,size=10)
-print alist, blist
-test_ref(alist, blist)
-print alist, blist
+# alist = np.ones(10,dtype=int)
+# blist = np.random.randint(10,size=10)
+# print alist, blist
+# test_ref(alist, blist)
+# print alist, blist

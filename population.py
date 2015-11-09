@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
-''' -*- Author: shaodan -*- '''
-''' -*-  2015.07.11 -*- '''
+# -*- Author: shaodan -*-
+# -*-  2015.07.11 -*-
 
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import spline
+import update
 import game
 
 
 class Population:
-    def set_graph(self, graph):
-        self.graph = graph
-        self.N = len(graph)
-        # 需要记录收益数组、策略数组
-        self.fitness = np.empty(self.N, dtype=np.double)
 
     def set_game(self, game):
         self.game = game
@@ -23,9 +19,16 @@ class Population:
         self.S = None
 
     def __init__(self, graph, mutation=False):
-        self.set_graph(graph)
+        self.graph = graph
+        self.N = len(graph)
+        # 需要记录收益数组、策略数组
+        self.fitness = np.empty(self.N, dtype=np.double)
         self.set_game(None)
         self.mutation = mutation
+        self.rec = None
+        self.S = None
+        self.evl = None
+        self.evolve_strategies = None
 
     # def __init__(self, graph, game):
     #     self.set_graph(graph)
@@ -36,7 +39,7 @@ class Population:
         # 演化记录
         self.rec = [0] * turns
         # 输出间隔
-        if cycle == None:
+        if cycle is None:
             cycle = turns/100
         # 循环
         death = None
@@ -44,16 +47,16 @@ class Population:
         game.set_param(self.graph, self.strategies, self.fitness)
         for i in xrange(turns):
             game.interact()
-            (birth,death) = update.update()
+            (birth, death) = update.update()
 
-            if (np.random.random() > 0.01) :
+            if np.random.random() > 0.01:
                 new_s = self.strategies[birth]
             else:
                 new_s = np.random.randint(2)
 
             # 统计绘图
             if i == 0:
-                self.rec[0]= (self.strategies==0).sum()
+                self.rec[0] = (self.strategies == 0).sum()
             else:
                 self.rec[i] = self.rec[i-1] + self.strategies[death] - new_s
 
@@ -71,7 +74,7 @@ class Population:
         self.evl = np.zeros((self.S,turns), dtype=np.int)
         self.evolve_strategies = np.random.randint(self.S, size=self.N)
         # 输出间隔
-        if cycle == None:
+        if cycle is None:
             cycle = turns/10
             if cycle < 1:
                 cycle = 10
@@ -80,9 +83,9 @@ class Population:
         update.set_graph(self.graph, self.fitness)
         for i in xrange(turns):
             game.interact(self.graph, self.strategies, self.fitness)
-            (birth,death) = update.update()
+            (birth, death) = update.update()
 
-            if (np.random.random() > 0.01) :
+            if np.random.random() > 0.01:
                 new_s = self.strategies[birth]
                 new_s_e = self.evolve_strategies[birth]
             else:
@@ -117,7 +120,7 @@ class Population:
         plt.xlabel('Step')
         plt.ylabel('Cooperation Ratio')
 
-        if self.S != None:
+        if self.S is not None:
             plt.figure(2)
             color = 'brgcmykw'
             # symb = '.ox+*sdph'

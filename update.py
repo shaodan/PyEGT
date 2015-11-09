@@ -5,6 +5,9 @@ import networkx as nx
 
 class Update:
     def __init__(self):
+        self.graph = None
+        self.fitness = None
+        self.N = 0
         pass
 
     # 策略更新过程，必须继承
@@ -31,7 +34,7 @@ class DeathBirth(Update):
     def update(self):
         death = np.random.randint(self.N)
         neigh = self.graph.neighbors(death)
-        if (len(neigh) == 0):
+        if len(neigh) == 0:
             print "==========no neigh for node:"+death+"=========="
             return death, death
         p = self.fitness[neigh]
@@ -51,8 +54,8 @@ class MineUpdate(Update):
 
 if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)
-    fitness = np.random.randint(1,3, size=100) * 1.0
+    f = np.random.randint(1, 3, size=100) * 1.0
     bd = BirthDeath()
-    bd.set_param(G, fitness)
+    bd.set_param(G, f)
     A = bd.update()
     print(A)
