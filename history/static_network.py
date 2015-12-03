@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-''' -*- Author: shaodan -*- '''
-''' -*-  2015.06.28 -*- '''
+#-*- Author: shaodan -*-
+#-*-  2015.06.28 -*-
 
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-#~ import game
 
 #参数设定
 N  = 1000              # 网络规模
@@ -45,7 +44,7 @@ def pdg(G, s, fitness, anchor):
             p = payoff_matrix[s[a]][s[b]]
             fitness[a] += p[0]
             fitness[b] += p[1]
-    elif anchor>=0 :
+    elif anchor>=0:
         # 只用计算新节点和其邻居节点的收益
         f = 0 # 新节点收益从0计算
         neigh_iter = G.neighbors_iter(anchor)
@@ -93,7 +92,7 @@ def pgg(G, s, fitness, anchor=None):
         # 只用计算新节点和其邻居节点的收益
         # 0合作，1背叛
         # 现在0背叛到合作(+)，1合作到背叛(-)
-        # sign = 
+        # sign =
         fitness[anchor]
         neigh_iter = G.neighbors_iter(anchor)
         for neigh in neigh_iter:

@@ -55,7 +55,7 @@ class PGG(Game):
     def interact_fast(self, node_list=None, edge_list=None):
         if not node_list:
             self.interact(self)
-        elif not (node_list isinstance list):
+        elif not isinstance(node_list, list):
             self.interact_fast(self, [node_list], edge_list)
         else:
             fitness = self.fitness
@@ -63,7 +63,7 @@ class PGG(Game):
             for node in node_list:
                 f_node = 0
                 for neigh in graph.neighbors_iter(node):
-                    f_node +
+                    f_node += 1
 
 
 class PDG(Game):
@@ -82,11 +82,11 @@ class PDG(Game):
             self.fitness[b] += p[1]
 
     def interact_fast(self, node_list=None, edge_list=None):
-         if not node_list:
+        if not node_list:
             self.interact(self)
-        elif not (node_list isinstance list):
+        elif not isinstance(node_list, list):
             self.interact_fast(self, [node_list], edge_list)
-        else:
+        elif True:
             # 只用计算新节点和其邻居节点的收益
             for node in node_list:
                 f = 0 # 新节点收益从0计算

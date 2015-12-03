@@ -4,6 +4,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 class Coevlv:
     def __init__(self, S):
         self.S = S
@@ -20,6 +21,7 @@ class Coevlv:
         plt.xlabel('Step')
         plt.ylabel('Strategies')
         plt.legend()
+
 
 class Rewire(Coevlv):
 
@@ -62,16 +64,16 @@ class Rewire(Coevlv):
     def rewire_new(self, G, s_e, anchor):
         # rewire only one link
         if s_e == 0:
-            p = np.ones(N)
-        elif s_e = 1:
+            p = np.ones(self.N)
+        elif s_e == 1:
             p = np.array(G.degree().values(), dtype=np.float64)
         else:
             pass
         p[anchor] = 0
-        p = p / float(p.sum())
-        new_neigh = np.random.choice(N,1,replace=False,p=p)
+        p /= float(p.sum())
+        new_neigh = np.random.choice(self.N, 1, replace=False, p=p)
         k = G.degree(anchor)
-        G.remove_edges_from(G.edges(anchor)[randi(k)])
+        G.remove_edges_from(G.edges(anchor)[np.random.choice(k, 1, False)])
         G.add_edge(anchor, new_neigh)
 
 

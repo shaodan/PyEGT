@@ -133,7 +133,7 @@ class Population:
             plt.legend()
         plt.show()
 
-if __name__ == "main":
+if __name__ == '__main__':
     G = nx.random_regular_graph(5, 10)
     g = game.PDG()
     u = update.BD()
