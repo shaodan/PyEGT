@@ -52,6 +52,20 @@ class PGG(Game):
         #     for neigh in neighs:
         #         fitness[neigh] += b
 
+    def interact_fast(self, node_list=None, edge_list=None):
+        if not node_list:
+            self.interact(self)
+        elif not (node_list isinstance list):
+            self.interact_fast(self, [node_list], edge_list)
+        else:
+            fitness = self.fitness
+            graph = self.graph
+            for node in node_list:
+                f_node = 0
+                for neigh in graph.neighbors_iter(node):
+                    f_node +
+
+
 class PDG(Game):
     name = "prisoner's_dilemma_game"
 
@@ -66,6 +80,28 @@ class PDG(Game):
             p = self.payoff[self.strategies[a]][self.strategies[b]]
             self.fitness[a] += p[0]
             self.fitness[b] += p[1]
+
+    def interact_fast(self, node_list=None, edge_list=None):
+         if not node_list:
+            self.interact(self)
+        elif not (node_list isinstance list):
+            self.interact_fast(self, [node_list], edge_list)
+        else:
+            # 只用计算新节点和其邻居节点的收益
+            for node in node_list:
+                f = 0 # 新节点收益从0计算
+                for neigh in self.graph.neighbors_iter(node):
+                    p = payoff_matrix[self.strategies[node]][self.strategies[neigh]]
+                    f += p[0]           # 新节点累加
+                    new_payoff = p[1]   # 邻居节点计算新的收益
+                    # 0合作，1背叛
+                    p = payoff_matrix[1-self.strategies[node]][self.strategies[neigh]]
+                    old_payoff = p[1]   # 邻居节点计算原来的收益
+                    self.fitness[neigh] += new_payoff - old_payoff
+                self.fitness[node] = f
+        else:
+            # 节点策略没有变化
+            pass
 
 class RPG(Game):
     name = "Rational Player Game"

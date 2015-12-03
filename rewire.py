@@ -32,6 +32,7 @@ class Rewire(Coevlv):
     def rewire(self, G, s_e, anchor):
         if self.N is None:
             self.N = len(G)
+        change_list = [anchor]
         if anchor is None:
             pass
         else:
@@ -57,6 +58,22 @@ class Rewire(Coevlv):
                 # if node >= anchor:
                 #     node += 1
                 G.add_edge(anchor, node)
+
+    def rewire_new(self, G, s_e, anchor):
+        # rewire only one link
+        if s_e == 0:
+            p = np.ones(N)
+        elif s_e = 1:
+            p = np.array(G.degree().values(), dtype=np.float64)
+        else:
+            pass
+        p[anchor] = 0
+        p = p / float(p.sum())
+        new_neigh = np.random.choice(N,1,replace=False,p=p)
+        k = G.degree(anchor)
+        G.remove_edges_from(G.edges(anchor)[randi(k)])
+        G.add_edge(anchor, new_neigh)
+
 
 if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)

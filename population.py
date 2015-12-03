@@ -104,7 +104,7 @@ class Population:
             self.strategies[death] = new_s
             self.evolve_strategies[death] = new_s_e
 
-            coevlv.rewire(self.graph, self.evolve_strategies[death], death)
+            coevlv.rewire_new(self.graph, self.evolve_strategies[death], death)
 
             if (i+1)%cycle == 0:
                 print('turn:'+str(i+1))

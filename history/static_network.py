@@ -45,7 +45,7 @@ def pdg(G, s, fitness, anchor):
             p = payoff_matrix[s[a]][s[b]]
             fitness[a] += p[0]
             fitness[b] += p[1]
-    elif anchor>=0 :    
+    elif anchor>=0 :
         # 只用计算新节点和其邻居节点的收益
         f = 0 # 新节点收益从0计算
         neigh_iter = G.neighbors_iter(anchor)
@@ -97,7 +97,7 @@ def pgg(G, s, fitness, anchor=None):
         fitness[anchor]
         neigh_iter = G.neighbors_iter(anchor)
         for neigh in neigh_iter:
-            # p = 
+            # p =
             f += p[0]           # 新节点累加
             new_payoff = p[1]   # 邻居节点计算新的收益
             p = payoff_matrix[1-s[anchor]][s[neigh]]
@@ -158,7 +158,7 @@ for i in xrange(K):
         death = -1
     else:
         s[death] = new_s
-    
+
     # 可以优化，通过r_s[i-1]直接计算
     r_s[i]= (s==0).sum()
 
