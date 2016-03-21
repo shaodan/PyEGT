@@ -3,51 +3,51 @@
 import numpy as np
 import networkx as nx
 
-class Update:
-    def __init__(self):
-        self.graph = None
-        self.fitness = None
-        self.N = 0
-        pass
+
+class UpdateRule(object):
 
     # 策略更新过程，必须继承
-    # G网络结构，fitness收益数组
-    def update(self):
+    # graph网络结构，fitness收益数组
+    def update(self, graph, fitness):
         pass
 
-    def set_param(self, graph, fitness):
-        self.graph = graph
-        self.N = len(graph)
-        self.fitness = fitness
 
-class BirthDeath(Update):
+class BirthDeath(UpdateRule):
 
-    def update(self):
-        p = self.fitness / self.fitness.sum()
-        birth = np.random.choice(self.N, replace=False, p=p)
-        neigh = self.graph.neighbors(birth)
-        death = np.random.choice(neigh,replace=False)
+    def update(self, graph, fitness):
+        size = len(graph)
+        p = fitness / fitness.sum()
+        birth = np.random.choice(size, replace=False, p=p)
+        neigh = graph.neighbors(birth)
+        death = np.random.choice(neigh, replace=False)
         return birth, death
 
-class DeathBirth(Update):
 
-    def update(self):
-        death = np.random.randint(self.N)
-        neigh = self.graph.neighbors(death)
+class DeathBirth(UpdateRule):
+
+    def update(self, graph, fitness):
+        size = len(graph)
+        death = np.random.randint(size)
+        neigh = graph.neighbors(death)
         if len(neigh) == 0:
             print "==========no neigh for node:"+death+"=========="
             return death, death
-        p = self.fitness[neigh]
+        p = fitness[neigh]
         if p.sum() == 0:
             p = None
         else:
             p = p / p.sum()
-        birth = np.random.choice(neigh,replace=False,p=p)
+        birth = np.random.choice(neigh, replace=False, p=p)
         return birth, death
 
-class MineUpdate(Update):
 
-    def update(self):
+class IM(UpdateRule):
+    def update(self, graph, fitness):
+        pass
+
+
+class MineUpdate(UpdateRule):
+    def update(self, graph, fitness):
         birth = 0
         death = 0
         return birth, death
@@ -56,6 +56,5 @@ if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)
     f = np.random.randint(1, 3, size=100) * 1.0
     bd = BirthDeath()
-    bd.set_param(G, f)
-    A = bd.update()
+    A = bd.update(G, f)
     print(A)

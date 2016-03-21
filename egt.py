@@ -3,7 +3,7 @@
 # -*-  2015.06.28 -*-
 
 import networkx as nx
-import population
+import evolution
 import update
 import game
 import rewire
@@ -14,9 +14,9 @@ import rewire
 # G = nx.random_regular_graph(5, 1000)
 # G = nx.convert_node_labels_to_integers(nx.grid_2d_graph(10,10))
 # G = nx.star_graph(10)
-# G = nx.random_graphs.barabasi_albert_graph(1000, 5, 3)
-douban = nx.read_edgelist('dataset/ASU/Douban-dataset/data/edges.csv', delimiter=',', nodetype=int, data=False)
-G = nx.relabel_nodes(douban, {len(douban): 0}, copy=False)
+G = nx.random_graphs.barabasi_albert_graph(100, 5, 10)
+# douban = nx.read_edgelist('dataset/ASU/Douban-dataset/data/edges.csv', delimiter=',', nodetype=int, data=False)
+# G = nx.relabel_nodes(douban, {len(douban): 0}, copy=False)
 
 # 网络结构绘图
 # pos=nx.spring_layout(G)
@@ -34,11 +34,20 @@ g = game.PDG()
 u = update.DeathBirth()
 
 # 演化
-p = population.Population(G)
-p.evolve(g, u, 1000, 100)
+e = evolution.Evolution(G, g, u)
+e.evolve(1000, 100)
+# 分析节点最终fit和结构参数的关系
+e.show_degree()
+
+# 重复实验，得到关系图
+# a = [0] * 100
+# for i in xrange(100):
+#     e.evolve(1000, 100)
+#     a[i] = e.proportion[-1]
+
 # 共演
 # r = rewire.Rewire(3)
 # p.coevolve(g, u, r, 1000)
 
 # 画图
-p.show()
+# p.show()

@@ -5,12 +5,12 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-class Coevlv:
+class Rule(object):
     def __init__(self, S):
         self.S = S
         self.N = None
 
-    def rewire(self, graph , s_e, anchor):
+    def rewire(self, graph, s_e, anchor):
         pass
 
     def draw(self):
@@ -23,7 +23,7 @@ class Coevlv:
         plt.legend()
 
 
-class Rewire(Coevlv):
+class Rewire(Rule):
 
     def __init__(self, S):
         super(S, self).__init__()
