@@ -11,10 +11,10 @@ class Game(object):
         pass
 
     # 博弈过程，必须继承
-    def interact(self, graph, strategy, fitness):
+    def play(self, graph, strategy, fitness):
         pass
 
-    def interact_fast(self, graph, strategy, fitness, node_list=None, edge_list=None):
+    def fast_play(self, graph, strategy, fitness, node_list=None, edge_list=None):
         pass
 
 
@@ -26,7 +26,7 @@ class PGG(Game):
         # 获利倍数
         self.r = r
 
-    def interact(self, graph, strategy, fitness):
+    def play(self, graph, strategy, fitness):
         # 可能会有负的fitness
         fitness.fill(0)
         # 第一种每个group投入1
@@ -51,16 +51,16 @@ class PGG(Game):
         #     for neigh in neighs:
         #         fitness[neigh] += b
 
-    def interact_fast(self, graph, strategy, fitness, node_list=None, edge_list=None):
+    def fast_play(self, graph, strategy, fitness, node_list=None, edge_list=None):
         if not node_list:
-            self.interact(graph, strategy, fitness)
+            self.play(graph, strategy, fitness)
         elif not isinstance(node_list, list):
-            self.interact_fast(graph, strategy, fitness, [node_list], edge_list)
+            self.fast_play(graph, strategy, fitness, [node_list], edge_list)
         else:
             for node in node_list:
-                f_node = 0
+                fitness[node] = 0
                 for neigh in graph.neighbors_iter(node):
-                    f_node += 1
+                    fitness[node] += 1
 
 
 class PDG(Game):
@@ -70,7 +70,7 @@ class PDG(Game):
         super(self.__class__, self).__init__()
         self.payoff = np.array([[(r, r), (s, t)], [(t, s), (p, p)]], dtype=np.double)
 
-    def interact(self, graph, strategy, fitness):
+    def play(self, graph, strategy, fitness):
         fitness.fill(0)
         for edge in graph.edges_iter():
             a = edge[0]
@@ -79,11 +79,11 @@ class PDG(Game):
             fitness[a] += p[0]
             fitness[b] += p[1]
 
-    def interact_fast(self, graph, strategy, fitness, node_list=None, edge_list=None):
+    def fast_play(self, graph, strategy, fitness, node_list=None, edge_list=None):
         if not node_list:
-            self.interact(graph, strategy, fitness)
+            self.play(graph, strategy, fitness)
         elif not isinstance(node_list, list):
-            self.interact_fast(graph, strategy, fitness, [node_list], edge_list)
+            self.fast_play(graph, strategy, fitness, [node_list], edge_list)
         elif True:
             # 只用计算新节点和其邻居节点的收益
             for node in node_list:
@@ -109,7 +109,7 @@ class RPG(Game):
         super(self.__class__, self).__init__()
         self.ration = ration
 
-    def interact(self, graph, strategy, fitness):
+    def play(self, graph, strategy, fitness):
         pass
 
 
@@ -119,5 +119,5 @@ if __name__ == '__main__':
     G = nx.random_regular_graph(5, 10)
     st = np.random.randint(2, size=10)
     fit = np.empty(10)
-    g.interact(G, st, fit)
+    g.play(G, st, fit)
     print fit

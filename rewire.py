@@ -6,16 +6,17 @@ import matplotlib.pyplot as plt
 
 
 class Rule(object):
-    def __init__(self, S):
-        self.S = S
-        self.N = None
+    def __init__(self, order):
+        self.size = order
+        self.color = None
+        self.label = None
 
     def rewire(self, graph, s_e, anchor):
         pass
 
     def draw(self):
         plt.figure(2)
-        for i in xrange(self.S):
+        for i in xrange(self.size):
             plt.plot(self.evl[:][i], self.color[i], label=self.label[i])
         plt.title('Co-evolutionary Game')
         plt.xlabel('Step')
@@ -25,27 +26,26 @@ class Rule(object):
 
 class Rewire(Rule):
 
-    def __init__(self, S):
-        super(S, self).__init__()
+    def __init__(self, order):
+        super(self.__class__, self).__init__(order)
         self.color = 'brgcmykw'
         # self.symb = '.ox+*sdph'
         self.label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
 
-    def rewire(self, G, s_e, anchor):
-        if self.N is None:
-            self.N = len(G)
+    def rewire(self, graph, s_e, anchor):
         change_list = [anchor]
+        size = len(graph)
         if anchor is None:
             pass
         else:
+            p = []
             k = G.degree(anchor)
             if s_e == 0:    # 随机选择
-                p = np.ones(self.N)
+                p = np.ones(size)
             elif s_e == 1:  # 度优先
                 p = np.array(G.degree().values(), dtype=np.float64)
             elif s_e == 2:  # 相似度
-                p = np.array([len(list(nx.common_neighbors(G, anchor, x)))
-                              for x in G.nodes_iter()], dtype=np.float64)
+                p = np.array([len(list(nx.common_neighbors(G, anchor, x))) for x in G.nodes_iter()], dtype=np.float64)
                 # 防止没有足够公共节点的
                 p += 1
             elif s_e == 3:
@@ -54,7 +54,7 @@ class Rewire(Rule):
                 pass
             p[anchor] = 0
             p /= float(p.sum())
-            new_neigh = np.random.choice(self.N, k, replace=False, p=p)
+            new_neigh = np.random.choice(size, k, replace=False, p=p)
             G.remove_edges_from(G.edges(anchor))
             for node in new_neigh:
                 # if node >= anchor:

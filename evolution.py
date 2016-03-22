@@ -21,9 +21,9 @@ class Evolution(object):
         self.size = len(graph)
         # 迭代次数，中断续演
         self.generation = 0
-        self.fitness = np.empty(self.size, dtype=np.double)
         # 策略: 0合作， 1背叛
         self.strategy = np.random.randint(2, size=self.size)
+        self.fitness = np.empty(self.size, dtype=np.double)
         # initialize variants
         self.has_mut = False
         self.proportion = None
@@ -38,23 +38,28 @@ class Evolution(object):
             if profile < 1:
                 profile = 10
         # 循环
+        death = None
         for i in xrange(turns):
-            self.game.interact(self.population, self.strategy, self.fitness)
+            self.game.play(self.population, self.strategy, self.fitness)
+            # self.game.fast_play(self.population, self.strategy, self.fitness, death)
             (birth, death) = self.rule.update(self.population, self.fitness)
 
+
             if np.random.random() > 0.01:
-                new_s = self.strategy[birth]
+                new_strategy = self.strategy[birth]
             else:
-                new_s = np.random.randint(2)
+                new_strategy = np.random.randint(2)
 
             # 统计
             if i == 0:
                 self.proportion[0] = (self.strategy == 0).sum()
             else:
-                self.proportion[i] = self.proportion[i - 1] + self.strategy[death] - new_s
+                self.proportion[i] = self.proportion[i - 1] + self.strategy[death] - new_strategy
 
             # 更新策略
-            self.strategy[death] = new_s
+            if self.strategy[death] == new_strategy:
+                pass
+            self.strategy[death] = new_strategy
 
             # 记录总演化轮数
             self.generation += 1
@@ -79,11 +84,11 @@ class Evolution(object):
         # plt.plot(self.population.degree().values(), self.fitness, marker='*')
         # plt.show()
         plt.scatter(self.population.degree().values(), self.fitness)
-        plt.show(block=False)
+        plt.show(block=True)
 
     def save(self):
-        current = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        path = 'data/'+current
+        time = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        path = os.path.dirname(os.path.realpath(__file__)) + time
         if not os.path.exists(path):
             os.makedirs(path)
         self.save_pajek(path)
@@ -109,7 +114,7 @@ class CoEvolution(Evolution):
     def __init__(self, graph, game_type, update_rule, coevolve_rule):
         super(self.__class__, self).__init__(graph, game_type, update_rule)
         self.coevolve = coevolve_rule
-        self.s_size = 3
+        self.s_size = coevolve_rule.size
         self.evl = None
         self.evolve_strategies = None
 
@@ -118,7 +123,6 @@ class CoEvolution(Evolution):
         super(self.__class__, self).evolve(turns, profile)
         # 演化记录
         self.proportion = [0] * turns
-        self.s_size = coevlv.S
         self.evl = np.zeros((self.s_size, turns), dtype=np.int)
         self.evolve_strategies = np.random.randint(self.s_size, size=self.size)
         # 输出间隔
@@ -152,7 +156,7 @@ class CoEvolution(Evolution):
             self.strategy[death] = new_s
             self.evolve_strategies[death] = new_s_e
 
-            coevlv.rewire_new(self.population, self.evolve_strategies[death], death)
+            self.coevolve.rewire_new(self.population, self.evolve_strategies[death], death)
 
             if (i+1)%profile == 0:
                 print('turn:'+str(i+1))
