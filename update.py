@@ -16,7 +16,9 @@ class BirthDeath(UpdateRule):
 
     def update(self, graph, fitness):
         size = len(graph)
-        p = fitness / fitness.sum()
+        # p = fitness / fitness.sum()
+        p = fitness.clip(min=0)
+        p = p / p.sum()
         birth = np.random.choice(size, replace=False, p=p)
         neigh = graph.neighbors(birth)
         death = np.random.choice(neigh, replace=False)
@@ -32,7 +34,7 @@ class DeathBirth(UpdateRule):
         if len(neigh) == 0:
             print "==========no neigh for node:"+death+"=========="
             return death, death
-        p = fitness[neigh]
+        p = fitness[neigh].clip(min=0)
         if p.sum() == 0:
             p = None
         else:
@@ -42,14 +44,23 @@ class DeathBirth(UpdateRule):
 
 
 class IM(UpdateRule):
+
     def update(self, graph, fitness):
         pass
 
 
-class MineUpdate(UpdateRule):
+class Femi(UpdateRule):
+
+    def __init__(self, k=1):
+        self.K = k
+
     def update(self, graph, fitness):
-        birth = 0
-        death = 0
+        size = len(graph)
+        death = np.random.randint(size)
+        neigh = graph.neighbors(death)
+        birth = np.random.choice(neigh)
+        if 1 / (1+ np.exp((fitness(birth)-fitness(death))/self.K)) > np.random.random():
+            birth = death
         return birth, death
 
 if __name__ == '__main__':

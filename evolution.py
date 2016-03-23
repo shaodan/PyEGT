@@ -22,44 +22,47 @@ class Evolution(object):
         # 迭代次数，中断续演
         self.generation = 0
         # 策略: 0合作， 1背叛
-        self.strategy = np.random.randint(2, size=self.size)
-        self.fitness = np.empty(self.size, dtype=np.double)
+        self.strategy = None
+        self.fitness = None
         # initialize variants
         self.has_mut = False
         self.proportion = None
 
     # 演化过程
     def evolve(self, turns, profile=None):
+        # 初始化
+        self.strategy = np.random.randint(2, size=self.size)
+        self.fitness = np.empty(self.size, dtype=np.double)
         # 演化记录
         self.proportion = [0] * turns
         # 输出间隔
         if profile is None:
-            profile = turns/100
+            profile = turns/10
             if profile < 1:
                 profile = 10
         # 循环
         death = None
         for i in xrange(turns):
-            self.game.play(self.population, self.strategy, self.fitness)
-            # self.game.fast_play(self.population, self.strategy, self.fitness, death)
+            self.game.play(self.population, self.strategy, self.fitness, death)
             (birth, death) = self.rule.update(self.population, self.fitness)
 
-
-            if np.random.random() > 0.01:
-                new_strategy = self.strategy[birth]
-            else:
+            if self.has_mut or np.random.random() <= 0.01:
                 new_strategy = np.random.randint(2)
+            else:
+                new_strategy = self.strategy[birth]
 
             # 统计
-            if i == 0:
-                self.proportion[0] = (self.strategy == 0).sum()
-            else:
-                self.proportion[i] = self.proportion[i - 1] + self.strategy[death] - new_strategy
+            self.proportion[i] = (self.strategy == 0).sum()
+            # if i == 0:
+            #     self.proportion[0] = (self.strategy == 0).sum()
+            # else:
+            #     self.proportion[i] = self.proportion[i - 1] + self.strategy[death] - new_strategy
 
             # 更新策略
             if self.strategy[death] == new_strategy:
-                pass
-            self.strategy[death] = new_strategy
+                death = []
+            else:
+                self.strategy[death] = new_strategy
 
             # 记录总演化轮数
             self.generation += 1
@@ -132,10 +135,9 @@ class CoEvolution(Evolution):
                 profile = 10
         # 循环
         death = None
-        update.set_graph(self.population, self.fitness)
         for i in xrange(turns):
-            game.interact(self.population, self.strategy, self.fitness)
-            (birth, death) = update.update()
+            self.game.play(self.population, self.strategy, self.fitness, death)
+            (birth, death) = self.rule.update(self.population, self.fitness)
 
             if np.random.random() > 0.01:
                 new_s = self.strategy[birth]
