@@ -31,10 +31,11 @@ class Game(object):
 class PGG(Game):
     """public_goods_game"""
 
-    def __init__(self, r=2):
+    def __init__(self, r=2, fixed=False):
         super(self.__class__, self).__init__()
         # 获利倍数
         self.r = float(r)
+        self.fixed = fixed
 
     def play(self, graph, strategy, fitness, node_list=None, edge_list=None):
         # 可能会有负的fitness
@@ -44,21 +45,21 @@ class PGG(Game):
             degrees = np.array(graph.degree().values())
             for node in graph.nodes_iter():
                 degree = degrees[node]
-                fitness[node] += (strategy[node] - 1) * (degree+1)
+                fitness[node] += (strategy[node]-1) * (degree+1)
                 neighs = graph.neighbors(node)
                 neighs.append(node)
-                # b = self.r * (strategy[neighs] == 0).sum() / (degree+1)
-                b = self.r * (len(neighs) - np.count_nonzero(strategy[neighs])) / (degree+1)
+                # b = self.r * (strategy[neighs]==0).sum() / (degree+1)
+                b = self.r * (len(neighs)-np.count_nonzero(strategy[neighs])) / (degree+1)
                 for neigh in neighs:
                     fitness[neigh] += b
             # 第二种每个group投入1/(k+1)
             # degrees = np.array(G.degree().values())
-            # inv = (1.0-s) / (degrees)
+            # inv = (1.0-strategy) / (degrees+1)
             # for node in G.nodes_iter():
-            #     fitness[node] += s[node] - 1
+            #     fitness[node] += strategy[node] - 1
             #     neighs = G.neighbors(node)
             #     neighs.append(node)
-            #     b = self.r * inv[neighs].sum() / float(degrees[node]+1)
+            #     b = self.r * inv[neighs].sum() / (degrees[node]+1)
             #     for neigh in neighs:
             #         fitness[neigh] += b
         else:
@@ -131,6 +132,11 @@ class RPG(Game):
     def play(self, graph, strategy, fitness, node_list=None, edge_list=None):
         pass
 
+
+class IPD(Game):
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
 
 # TEST CODE HERE
 if __name__ == '__main__':

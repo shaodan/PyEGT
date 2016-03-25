@@ -14,7 +14,7 @@ import game
 
 class Evolution(object):
 
-    def __init__(self, graph, game_type, update_rule):
+    def __init__(self, graph, game_type, update_rule, has_mut=True):
         self.population = graph
         self.game = game_type
         self.rule = update_rule
@@ -25,7 +25,7 @@ class Evolution(object):
         self.strategy = None
         self.fitness = None
         # initialize variants
-        self.has_mut = False
+        self.has_mut = has_mut
         self.proportion = None
 
     # 演化过程
@@ -46,17 +46,16 @@ class Evolution(object):
             self.game.play(self.population, self.strategy, self.fitness, death)
             (birth, death) = self.rule.update(self.population, self.fitness)
 
-            if self.has_mut or np.random.random() <= 0.01:
+            if self.has_mut and np.random.random() <= 0.01:
                 new_strategy = np.random.randint(2)
             else:
                 new_strategy = self.strategy[birth]
 
             # 统计
-            self.proportion[i] = (self.strategy == 0).sum()
-            # if i == 0:
-            #     self.proportion[0] = (self.strategy == 0).sum()
-            # else:
-            #     self.proportion[i] = self.proportion[i - 1] + self.strategy[death] - new_strategy
+            if i == 0:
+                self.proportion[0] = (self.strategy == 0).sum()
+            else:
+                self.proportion[i] = self.proportion[i - 1] + self.strategy[death] - new_strategy
 
             # 更新策略
             if self.strategy[death] == new_strategy:
@@ -96,14 +95,14 @@ class Evolution(object):
             os.makedirs(path)
         self.save_pajek(path)
         sio.savemat(path +'/data.mat', mdict={'fitness': self.fitness,
-                                             'strategy': self.strategy,
-                                             'log': self.proportion})
+                                              'strategy': self.strategy,
+                                              'log': self.proportion})
 
     def load(self, path):
         self.load_pajek(path)
         mat = sio.loadmat(path +'/data.mat', mdict={'fitness': self.fitness,
-                                                   'strategy': self.strategy,
-                                                   'log': self.proportion})
+                                                    'strategy': self.strategy,
+                                                    'log': self.proportion})
 
     def save_pajek(self, path):
         nx.write_pajek(self.population, path+'/graph.net')
@@ -117,7 +116,7 @@ class CoEvolution(Evolution):
     def __init__(self, graph, game_type, update_rule, coevolve_rule):
         super(self.__class__, self).__init__(graph, game_type, update_rule)
         self.coevolve = coevolve_rule
-        self.s_size = coevolve_rule.size
+        self.s_size = coevolve_rule.order
         self.evl = None
         self.evolve_strategies = None
 

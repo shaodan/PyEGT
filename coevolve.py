@@ -5,41 +5,25 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-class Rule(object):
+class CoEvolveRule(object):
     def __init__(self, order):
-        self.size = order
-        self.color = None
-        self.label = None
+        self.order = order
 
     def rewire(self, graph, s_e, anchor):
         pass
 
-    def draw(self):
-        plt.figure(2)
-        for i in xrange(self.size):
-            plt.plot(self.evl[:][i], self.color[i], label=self.label[i])
-        plt.title('Co-evolutionary Game')
-        plt.xlabel('Step')
-        plt.ylabel('Strategies')
-        plt.legend()
 
+class Rewire(CoEvolveRule):
 
-class Rewire(Rule):
-
-    def __init__(self, order):
+    def __init__(self, order=4):
         super(self.__class__, self).__init__(order)
-        self.color = 'brgcmykw'
-        # self.symb = '.ox+*sdph'
-        self.label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
 
     def rewire(self, graph, s_e, anchor):
-        change_list = [anchor]
         size = len(graph)
         if anchor is None:
             pass
         else:
             p = []
-            k = G.degree(anchor)
             if s_e == 0:    # 随机选择
                 p = np.ones(size)
             elif s_e == 1:  # 度优先
@@ -54,12 +38,11 @@ class Rewire(Rule):
                 pass
             p[anchor] = 0
             p /= float(p.sum())
-            new_neigh = np.random.choice(size, k, replace=False, p=p)
-            G.remove_edges_from(G.edges(anchor))
-            for node in new_neigh:
-                # if node >= anchor:
-                #     node += 1
-                G.add_edge(anchor, node)
+            old = np.random.choice(graph.neighbors(anchor))
+            new = np.random.choice(size, replace=False, p=p)
+            graph.remove_edge(anchor, old)
+            graph.add_edge(anchor, new)
+        return old, new
 
     def rewire_new(self, G, s_e, anchor):
         # rewire only one link
