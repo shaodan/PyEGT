@@ -16,7 +16,6 @@ class BirthDeath(UpdateRule):
 
     def update(self, graph, fitness):
         size = len(graph)
-        # p = fitness / fitness.sum()
         p = fitness.clip(min=0)
         p = p / p.sum()
         birth = np.random.choice(size, replace=False, p=p)
@@ -49,18 +48,22 @@ class IM(UpdateRule):
         pass
 
 
-class Femi(UpdateRule):
+class Fermi(UpdateRule):
 
-    def __init__(self, k=1):
+    def __init__(self, k=0.1):
         self.K = k
 
     def update(self, graph, fitness):
         size = len(graph)
-        death = np.random.randint(size)
-        neigh = graph.neighbors(death)
-        birth = np.random.choice(neigh)
-        if 1 / (1+ np.exp((fitness(birth)-fitness(death))/self.K)) > np.random.random():
-            birth = death
+        # choice random pair in graph
+        # edges = graph.edges()
+        # size = len(edges)
+        # birth, death = edges[np.random.randint(size)]
+        birth, death = np.random.randint(size, size=2)
+        while birth == death or (not graph.has_edge(birth, death)):
+            birth, death = np.random.randint(size, size=2)
+        if 1 / (1+ np.exp((fitness[birth]-fitness[death])/self.K)) < np.random.random():
+            death = birth
         return birth, death
 
 if __name__ == '__main__':
@@ -68,4 +71,9 @@ if __name__ == '__main__':
     f = np.random.randint(1, 3, size=100) * 1.0
     bd = BirthDeath()
     A = bd.update(G, f)
+    fermi = Fermi()
+    B = fermi.update(G, f)
     print(A)
+    print G.has_edge(A[0], A[1])
+    print B
+    print G.has_edge(B[0], B[1])
