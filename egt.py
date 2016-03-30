@@ -17,12 +17,12 @@ import coevolve
 # G = nx.random_regular_graph(4, 1000)
 # G = nx.convert_node_labels_to_integers(nx.grid_2d_graph(10,10))
 # G = nx.star_graph(10)
-G = nx.random_graphs.watts_strogatz_graph(1000, 4, 0.3)
-# G = nx.random_graphs.barabasi_albert_graph(1000, 5, 10)
+# G = nx.random_graphs.watts_strogatz_graph(1000, 4, 0.3)
+G = nx.random_graphs.barabasi_albert_graph(100, 5, 10)
 # G = nx.random_graphs.powerlaw_cluster_graph(1000, 10, 0.2)
 # G = nx.convert_node_labels_to_integers(nx.davis_southern_women_graph())
 # douban = nx.read_edgelist(os.path.dirname(os.path.realpath(__file__))+'/dataset/ASU/Douban-dataset/data/edges.csv', delimiter=',', nodetype=int, data=False)
-# G = nx.relabel_nodes(douban, {len(douban): 0}, copy=False)
+# G = nx.relabel_nodes(douban, {len(douban): 0}, copy=False)  #数据从1开始标号，需要转换为0开始记号
 
 # 网络结构绘图
 # pos=nx.spring_layout(G)
@@ -39,17 +39,19 @@ g = game.PGG(3)
 # u = update.BirthDeath()
 # u = update.DeathBirth()
 u = update.Fermi()
+# u = update.HeteroFermi()
 
 # 演化
 e = evolution.Evolution(G, g, u)
-e.evolve(20000)
+e.evolve(2000)
 
 
 # 重复实验，得到关系图
 def repeat(times):
     a = [0] * times
     for i in xrange(100):
-        e.evolve(1000, 100)
+        e.evolve(20000, 20000)
+        print(i)
         a[i] = e.proportion[-1]
 
 # 共演

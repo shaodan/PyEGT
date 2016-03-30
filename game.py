@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# -*- Author: shaodan -*-
+# -*-  2015.07.11 -*-
 
 import numpy as np
 import networkx as nx

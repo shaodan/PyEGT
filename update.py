@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# -*- Author: shaodan -*-
+# -*-  2015.07.11 -*-
 
 import numpy as np
 import networkx as nx
@@ -62,7 +64,29 @@ class Fermi(UpdateRule):
         birth, death = np.random.randint(size, size=2)
         while birth == death or (not graph.has_edge(birth, death)):
             birth, death = np.random.randint(size, size=2)
-        if 1 / (1+ np.exp((fitness[birth]-fitness[death])/self.K)) < np.random.random():
+        if 1 / (1+np.exp((fitness[death]-fitness[birth])/self.K)) > np.random.random():
+            death = birth
+        return birth, death
+
+
+class HeteroFermi(UpdateRule):
+
+    def __init__(self, delta):
+        # delta = max(T, R) - min(S,P) > 0
+        # for pd delta = T-S
+        # for sd delta = T-P
+        # for sh delta = R-S
+        self.delta = delta
+
+    def update(self, graph, fitness):
+        size = len(graph)
+        # choice random pair in graph
+        birth, death = np.random.randint(size, size=2)
+        while birth == death or (not graph.has_edge(birth, death)):
+            birth, death = np.random.randint(size, size=2)
+        degree_b = graph.degree(birth)
+        degree_d = graph.degree(death)
+        if (fitness[death]-fitness[birth]) / (self.delta * max(degree_b, degree_d)) > np.random.random():
             death = birth
         return birth, death
 

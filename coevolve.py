@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+# -*- Author: shaodan -*-
+# -*-  2015.07.11 -*-
 
 import numpy as np
 import networkx as nx
-import matplotlib.pyplot as plt
 
 
 class CoEvolveRule(object):
@@ -13,7 +14,7 @@ class CoEvolveRule(object):
         pass
 
 
-class Rewire(CoEvolveRule):
+class Preference(CoEvolveRule):
 
     def __init__(self, order=4):
         super(self.__class__, self).__init__(order)
@@ -44,7 +45,7 @@ class Rewire(CoEvolveRule):
             graph.add_edge(anchor, new)
         return old, new
 
-    def rewire_new(self, G, s_e, anchor):
+    def rewire_one(self, G, s_e, anchor):
         # rewire only one link
         if s_e == 0:
             p = np.ones(self.N)
