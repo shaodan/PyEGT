@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# -*- Author: shaodan -*-
+# -*- Author: shaodan(shaodan.cn@gmail.com) -*-
 # -*-  2015.07.11 -*-
 
 import numpy as np
@@ -91,6 +91,7 @@ class PDG(Game):
     def __init__(self, r=1, t=1.5, s=0, p=0.1):
         super(self.__class__, self).__init__()
         self.payoff = np.array([[(r, r), (s, t)], [(t, s), (p, p)]], dtype=np.double)
+        self.delta = t-s
 
     def play(self, graph, strategy, fitness, node_list=None, edge_list=None):
         if node_list is None:

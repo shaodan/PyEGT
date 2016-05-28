@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import evolution
 import update
 import game
-import coevolve
+import adapter
 
 # 生成网络
 # G = ba(N, 5, 3, 1)
@@ -32,18 +32,18 @@ G = nx.random_graphs.barabasi_albert_graph(100, 5, 10)
 # exit(1)
 
 # 博弈类型
-# g = game.PDG()
-g = game.PGG(3)
+g = game.PDG()
+# g = game.PGG(3)
 
 # 学习策略
-# u = update.BirthDeath()
+u = update.BirthDeath()
 # u = update.DeathBirth()
-u = update.Fermi()
-# u = update.HeteroFermi()
+# u = update.Fermi()
+# u = update.HeteroFermi(g.delta)
 
 # 演化
 e = evolution.Evolution(G, g, u)
-e.evolve(2000)
+e.evolve(20000)
 
 
 # 重复实验，得到关系图
@@ -55,8 +55,9 @@ def repeat(times):
         a[i] = e.proportion[-1]
 
 # 共演
-# r = rewire.Rewire(3)
-# p.coevolve(g, u, r, 1000)
+# p = coevolve.Preference(3)
+# c = evolution.CoEvolution(G, g, u, p)
+# c.coevolve(2000)
 
 # 画图
 e.show()

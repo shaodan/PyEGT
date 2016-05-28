@@ -2,7 +2,8 @@
 # -*- Author: shaodan -*-
 # -*-  2015.07.11 -*-
 
-import datetime, os
+import datetime
+import os
 import networkx as nx
 import numpy as np
 import scipy.io as sio
@@ -134,21 +135,35 @@ class Evolution(object):
         if not os.path.exists(path):
             os.makedirs(path)
         self.save_pajek(path)
-        sio.savemat(path +'/data.mat', mdict={'fitness': self.fitness,
-                                              'strategy': self.strategy,
-                                              'log': self.proportion})
+        sio.savemat(path+'/data.mat', mdict={'fitness': self.fitness,
+                                             'strategy': self.strategy,
+                                             'log': self.proportion})
 
     def load(self, path):
         self.load_pajek(path)
-        mat = sio.loadmat(path +'/data.mat', mdict={'fitness': self.fitness,
-                                                    'strategy': self.strategy,
-                                                    'log': self.proportion})
+        mat = sio.loadmat(path+'/data.mat', mdict={'fitness': self.fitness,
+                                                   'strategy': self.strategy,
+                                                   'log': self.proportion})
+        self.fitness = mat['fitness']
+        self.strategy = mat['strategy']
+        self.proportion = mat['log']
 
     def save_pajek(self, path):
         nx.write_pajek(self.population, path+'/graph.net')
 
     def load_pajek(self, path):
         self.population = nx.read_pajek(path+'/graph.net')
+
+
+class StaticStrategy(Evolution):
+
+    def __init__(self, graph, game_type, update_rule, coevolve_rule):
+        super(self.__class__, self).__init__(graph, game_type, update_rule)
+        self.coevolve = coevolve_rule
+        self.s_size = coevolve_rule.order
+
+    def evolve(self, turns, profile=None):
+        super(self.__class__, self).evolve(turns, profile)
 
 
 class CoEvolution(Evolution):
@@ -162,7 +177,7 @@ class CoEvolution(Evolution):
 
     # 共演过程
     def evolve(self, turns, profile=None):
-        super(self.__class__, self).evolve(turns, profile)
+        # super(self.__class__, self).evolve(turns, profile)
         # 演化记录
         self.proportion = [0] * turns
         self.evl = np.zeros((self.s_size, turns), dtype=np.int)
@@ -187,11 +202,11 @@ class CoEvolution(Evolution):
 
             # 统计绘图
             if i == 0:
-                self.proportion[0]= (self.strategy == 0).sum()
+                self.proportion[0] = (self.strategy == 0).sum()
             else:
                 self.proportion[i] = self.proportion[i - 1] + self.strategy[death] - new_s
             for m in xrange(self.s_size):
-                self.evl[m][i] = (self.evolve_strategies==m).sum()
+                self.evl[m][i] = (self.evolve_strategies == m).sum()
 
             # 更新策略
             self.strategy[death] = new_s
@@ -199,7 +214,7 @@ class CoEvolution(Evolution):
 
             self.coevolve.rewire_one(self.population, self.evolve_strategies[death], death)
 
-            if (i+1)%profile == 0:
+            if (i+1) % profile == 0:
                 print('turn:'+str(i+1))
 
     def show(self):
@@ -211,7 +226,7 @@ class CoEvolution(Evolution):
         label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
         for i in xrange(self.s_size):
             plt.plot(self.evl[:][i], color[i], label=label[i])
-        plt.title('Coevolutionary Game')
+        plt.title('CoEvolutionary Game')
         plt.xlabel('Step')
         plt.ylabel('Strategies')
         plt.legend()

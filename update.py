@@ -4,6 +4,7 @@
 
 import numpy as np
 import networkx as nx
+import warnings
 
 
 class UpdateRule(object):
@@ -18,7 +19,7 @@ class BirthDeath(UpdateRule):
 
     def update(self, graph, fitness):
         size = len(graph)
-        p = fitness.clip(min=0)
+        p = fitness.clip(min=0)       #todo: PGG存在负收益，忽略这些节点
         p = p / p.sum()
         birth = np.random.choice(size, replace=False, p=p)
         neigh = graph.neighbors(birth)
@@ -54,13 +55,10 @@ class Fermi(UpdateRule):
 
     def __init__(self, k=0.1):
         self.K = k
+        np.seterr(over='warn')
 
     def update(self, graph, fitness):
         size = len(graph)
-        # choice random pair in graph
-        # edges = graph.edges()
-        # size = len(edges)
-        # birth, death = edges[np.random.randint(size)]
         birth, death = np.random.randint(size, size=2)
         while birth == death or (not graph.has_edge(birth, death)):
             birth, death = np.random.randint(size, size=2)
