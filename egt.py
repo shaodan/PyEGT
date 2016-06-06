@@ -7,9 +7,16 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import evolution
-import update
+import rule
 import game
 import adapter
+
+
+def load_graph(path):
+    full_path = os.path.dirname(os.path.realpath(__file__)) + path
+    graph = nx.read_edgelist(full_path, delimiter=',', nodetype=int, data=False)
+    graph = nx.relabel_nodes(graph, {len(graph): 0}, copy=False)  # 数据从1开始标号，需要转换为0开始记号
+    return graph
 
 # 生成网络
 # G = ba(N, 5, 3, 1)
@@ -21,8 +28,7 @@ import adapter
 G = nx.random_graphs.barabasi_albert_graph(100, 5, 10)
 # G = nx.random_graphs.powerlaw_cluster_graph(1000, 10, 0.2)
 # G = nx.convert_node_labels_to_integers(nx.davis_southern_women_graph())
-# douban = nx.read_edgelist(os.path.dirname(os.path.realpath(__file__))+'/dataset/ASU/Douban-dataset/data/edges.csv', delimiter=',', nodetype=int, data=False)
-# G = nx.relabel_nodes(douban, {len(douban): 0}, copy=False)  #数据从1开始标号，需要转换为0开始记号
+# G = load_graph("/dataset/ASU/Douban-dataset/data/edges.csv")
 
 # 网络结构绘图
 # pos=nx.spring_layout(G)
@@ -36,7 +42,7 @@ g = game.PDG()
 # g = game.PGG(3)
 
 # 学习策略
-u = update.BirthDeath()
+u = rule.BirthDeath()
 # u = update.DeathBirth()
 # u = update.Fermi()
 # u = update.HeteroFermi(g.delta)
@@ -55,9 +61,9 @@ def repeat(times):
         a[i] = e.proportion[-1]
 
 # 共演
-# p = coevolve.Preference(3)
+# p = adapter.Preference(3)
 # c = evolution.CoEvolution(G, g, u, p)
-# c.coevolve(2000)
+# c.evolve(2000)
 
 # 画图
 e.show()
