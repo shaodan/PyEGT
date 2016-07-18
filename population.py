@@ -4,6 +4,7 @@
 
 import networkx as nx
 import numpy as np
+import os
 
 
 class Population(nx.Graph):
@@ -21,7 +22,13 @@ class Population(nx.Graph):
         self.fitness = np.empty(self.size, dtype=np.double)
         # 策略: 0合作， 1背叛
         self.strategy = np.random.randint(2, size=self.size)
-        del graph
+
+    def shallow_copy(self, graph):
+        # todo : mind gc
+        self.graph = graph.graph
+        self.node = graph.node
+        self.adj = graph.adj
+        self.edge = self.adj
 
     def add_edge(self, u, v, attr_dict=None, **attr):
         # u, v must exist and edge[u,v] must not exist
@@ -35,6 +42,7 @@ class Population(nx.Graph):
         self.degree_list[v] -= 1
 
     def random_node(self, ):
+        # np.random.randint(self.size)
         np.random.choice(self.node.keys())
 
     def choice_node(self, size=None, replace=True, p=None):
@@ -42,14 +50,14 @@ class Population(nx.Graph):
 
     def random_edge(self):
         # choice random pair in graph
-        size = len(self.edges())
+        edge_size = sum([len(adj.values()) for adj in self.adj.values()]) / 2
         total = self.size * (self.size-1) / 2
-        if total / size > 100:
-            birth, death = np.random.randint(size, size=2)
+        if total / edge_size > 100:
+            birth, death = np.random.randint(self.size, size=2)
             while birth == death or (not self.has_edge(birth, death)):
-                birth, death = np.random.randint(size, size=2)
+                birth, death = np.random.randint(self.size, size=2)
         else:
-            birth, death = self.edge[np.random.randint(size)]
+            birth, death = self.edges()[np.random.randint(edge_size)]
         return birth, death
 
     def prepare(self):
@@ -58,7 +66,14 @@ class Population(nx.Graph):
 
     def cooperation_rate(self):
         # count_nonzero() is faster than (self.strategy == 0).sum()
+        # see test.py test_count_zero()
         return self.size - np.count_nonzero(self.strategy)
+
+    def load_graph(self, path):
+        full_path = os.path.dirname(os.path.realpath(__file__)) + path
+        nx.read_edgelist(full_path, create_using=self, delimiter=',', nodetype=int, data=False)
+        nx.relabel_nodes(self, {self.size: 0}, copy=False)  # 数据从1开始标号，需要转换为0开始记号
+
 
 # TEST CODE HERE
 if __name__ == '__main__':
@@ -67,3 +82,11 @@ if __name__ == '__main__':
     print P.degree()
     print P.edges()
     print list(nx.common_neighbors(P, 0, 1))
+    print 'edge_size:', sum([len(item.values()) for item in P.adj.values()]) / 2, len(P.edges())
+
+    G.graph["name"] = "b"
+    G.add_node(2000)
+    print P.graph
+    print len(P)
+    P.add_node(2001)
+    print len(P)

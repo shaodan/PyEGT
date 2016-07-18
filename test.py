@@ -39,20 +39,20 @@ def test_len():
 
 
 def test_zeros():
-    t1 = timeit.Timer('np.zeros(10000)', 'import numpy as np')
+    t1 = timeit.Timer('np.zeros(10000)',  'import numpy as np')
     t2 = timeit.Timer('a=np.empty(10000);a.fill(0)', 'import numpy as np')
 
     a = np.zeros(10000, dtype=np.double)
     b = np.empty(10000)
     b.fill(0)
-    print type(a[0]),type(b[0])
+    print type(a[0]), type(b[0])
     print t1.timeit(1000)/1000
     print t2.timeit(1000)/1000
 
 
-def test_ref(alist, blist):
-    alist = blist/2
-    print alist, blist
+def test_ref(a_list, b_list):
+    a_list = b_list / 2
+    print a_list, b_list
 
 
 def test_read_graph_data():
@@ -81,6 +81,25 @@ def test_count_zero():
     print t1.timeit(1000)/1000
     print t2.timeit(1000)/1000
 
+
+def test_attr_addressing():
+    t1 = timeit.Timer('[g.fitness[i] for i in xrange(10000)]', 'import networkx as nx;g=nx.Graph();g.fitness=range(10000)')
+    t2 = timeit.Timer('[fitness[i] for i in xrange(10000)]', 'fitness=range(10000);')
+    print t1.timeit(1000)/1000
+    print t2.timeit(1000)/1000
+
+
+def test_edge_size():
+    setup = 'import networkx as nx;P=nx.random_graphs.watts_strogatz_graph(2000, 10, 0.3);'
+    t1 = timeit.Timer('sum([len(item.values()) for item in P.adj.values()]) / 2', setup)
+    t2 = timeit.Timer('len(P.edges())', setup)
+    print t1.timeit(10)/10
+    print t2.timeit(10)/10
+
+
+# test_attr_addressing()
+test_edge_size()
+
 # test_random()
 # test_sum
 # test_len()
@@ -90,10 +109,10 @@ def test_count_zero():
 # test_empty_list([3])
 # test_empty_list(3)
 # test_if_is()
-test_count_zero()
+# test_count_zero()
 
-# alist = np.ones(10,dtype=int)
-# blist = np.random.randint(10,size=10)
-# print alist, blist
-# test_ref(alist, blist)
-# print alist, blist
+# a_list = np.ones(10, dtype=int)
+# b_list = np.random.randint(10, size=10)
+# print a_list, b_list
+# test_ref(a_list, b_list)
+# print a_list, b_list

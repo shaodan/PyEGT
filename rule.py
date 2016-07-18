@@ -57,10 +57,7 @@ class Fermi(Rule):
         np.seterr(over='warn')
 
     def update(self, population):
-        size = population.size
-        birth, death = np.random.randint(size, size=2)
-        while birth == death or (not population.has_edge(birth, death)):
-            birth, death = np.random.randint(size, size=2)
+        birth, death = population.random_edge()
         if 1 / (1+np.exp((population.fitness[death]-population.fitness[birth])/self.K)) > np.random.random():
             death = birth
         return birth, death
