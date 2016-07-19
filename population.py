@@ -4,6 +4,7 @@
 
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 import os
 
 
@@ -16,6 +17,7 @@ class Population(nx.Graph):
         super(self.__class__, self).__init__(graph)
         # nx.convert_node_labels_to_integers(self)
         self.size = len(graph)
+        # todo: what if degree is not sorted
         self.degree_list = self.degree().values()
         # data of node is stored in dict which is memory inefficient
         # use list instead
@@ -24,22 +26,43 @@ class Population(nx.Graph):
         self.strategy = np.random.randint(2, size=self.size)
 
     def shallow_copy(self, graph):
-        # todo : mind gc
+        # todo : gc
         self.graph = graph.graph
         self.node = graph.node
         self.adj = graph.adj
         self.edge = self.adj
 
-    def add_edge(self, u, v, attr_dict=None, **attr):
-        # u, v must exist and edge[u,v] must not exist
-        super(self.__class__, self).add_edge(u, v)
-        self.degree_list[u] += 1
-        self.degree_list[v] += 1
+    # def add_edge(self, u, v):
+    #     # u, v must exist and edge[u,v] must not exist
+    #     super(self.__class__, self).add_edge(u, v)
+    #     print "add edge(%d, %d)" %(u, v)
+    #     self.degree_list[u] += 1
+    #     self.degree_list[v] += 1
 
-    def remove_edge(self, u, v):
-        super(self.__class__, self).remove_edge(u, v)
-        self.degree_list[u] -= 1
+    # def remove_edge(self, u, v):
+    #     super(self.__class__, self).remove_edge(u, v)
+    #     print "remove edge(%d, %d)" %(u, v)
+    #     self.degree_list[u] -= 1
+    #     self.degree_list[v] -= 1
+
+    def add_node(self, node):
+        super(self.__class__, self).add_node(node)
+        self.size += 1
+
+    def nodes_exclude_neighbors(self, node):
+        # exclude neighborhoods and node itself
+        all_list = self.nodes()
+        for n in self.neighbors_iter(node):
+            all_list[n] = -1
+        all_list[node] = -1
+        return filter(lambda x : x>=0, all_list)
+
+    def rewire(self, u, v, w):
+        # check if node/edge exist before call
+        self.remove_edge(u, v)
         self.degree_list[v] -= 1
+        self.add_edge(u, w)
+        self.degree_list[w] += 1
 
     def random_node(self, ):
         # np.random.randint(self.size)
@@ -74,10 +97,17 @@ class Population(nx.Graph):
         nx.read_edgelist(full_path, create_using=self, delimiter=',', nodetype=int, data=False)
         nx.relabel_nodes(self, {self.size: 0}, copy=False)  # 数据从1开始标号，需要转换为0开始记号
 
+    def draw(self):
+        pass
+
+    def degree_histogram(self):
+        degree_h = nx.degree_histogram(self)
+        plt.loglog(degree_h, 'b-', marker='o')
+
 
 # TEST CODE HERE
 if __name__ == '__main__':
-    G = nx.random_graphs.watts_strogatz_graph(1000, 4, 0.3)
+    G = nx.random_graphs.watts_strogatz_graph(100, 4, 0.3)
     P = Population(G)
     print P.degree()
     print P.edges()
@@ -90,3 +120,7 @@ if __name__ == '__main__':
     print len(P)
     P.add_node(2001)
     print len(P)
+
+    a = P.neighbors(0)
+    b = P.nodes_exclude_neighbors(0)
+    assert(len(a)+len(b)+1 == P.size)

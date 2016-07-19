@@ -48,8 +48,8 @@ u = rule.BirthDeath()
 # u = update.HeteroFermi(g.delta)
 
 # 演化
-e = evolution.Evolution(G, g, u)
-e.evolve(20000)
+# e = evolution.Evolution(G, g, u)
+# e.evolve(20000)
 
 
 # 重复实验，得到关系图
@@ -61,9 +61,9 @@ def repeat(times):
         a[i] = e.proportion[-1]
 
 # 共演
-# p = adapter.Preference(3)
-# c = evolution.CoEvolution(G, g, u, p)
-# c.evolve(2000)
+p = adapter.Preference(3)
+e = evolution.CoEvolution(G, g, u, p)
+e.evolve(2000)
 
 # 画图
 e.show()

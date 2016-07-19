@@ -33,7 +33,7 @@ class DeathBirth(Rule):
         death = np.random.randint(population.size)
         neigh = population.neighbors(death)
         if len(neigh) == 0:
-            print "==========no neigh for node:"+death+"=========="
+            print "====no neigh for node:"+str(death)+"===="
             return death, death
         p = population.fitness[neigh].clip(min=0)
         if p.sum() == 0:
@@ -74,7 +74,7 @@ class HeteroFermi(Rule):
 
     def update(self, population):
         birth, death = population.random_edge()
-        degree = max(population.degrees[birth], population.degrees[death])
+        degree = max(population.degree_list[birth], population.degree_list[death])
         if (population.fitness[death]-population.fitness[birth]) / (self.delta * degree) > np.random.random():
             death = birth
         return birth, death

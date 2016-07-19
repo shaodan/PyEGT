@@ -8,21 +8,22 @@ from population import Population
 
 
 class Adapter(object):
-    def __init__(self, order):
+    def __init__(self, order, min_degree=2):
         self.order = order
+        self.min_degree = min_degree
 
-    # prefer优先策略，anchor重连节点
-    def adapt(self, graph, prefer, anchor=None, source=None):
+    # prefer优先策略，anchor重连节点, source?
+    def adapt(self, population, prefer, anchor, source=None):
         pass
 
 
 class LocalAdapter(Adapter):
 
-    def adapt(self, graph, prefer, anchor=None, source=None):
-        size = len(graph)
+    def adapt(self, population, prefer, anchor, source=None):
+        size = len(population)
         if anchor is None or source is None:
             return None
-        alter = graph.neighbors(source)
+        alter = population.neighbors_of_neighbors(source)
         new = None
         if prefer == 0:
             new = np.random.choice(alter)
@@ -36,8 +37,8 @@ class LocalAdapter(Adapter):
 
 class GlobalAdapter(Adapter):
 
-    def adapt(self, graph, prefer, anchor=None, source=None):
-        size = len(graph)
+    def adapt(self, population, prefer, anchor, source=None):
+        pass
 
 
 class Preference(Adapter):
@@ -45,7 +46,7 @@ class Preference(Adapter):
     def __init__(self, order=4):
         super(self.__class__, self).__init__(order)
 
-    def adapt(self, population, prefer, anchor=None, source=None):
+    def adapt(self, population, prefer, anchor, source=None):
         size = len(population)
         if anchor is None:
             return None
@@ -53,7 +54,7 @@ class Preference(Adapter):
         if prefer == 0:    # 随机选择
             p = np.ones(size)
         elif prefer == 1:  # 度优先
-            p = np.array(population.degree().values(), dtype=np.float64)
+            p = np.array(population.degree_list, dtype=np.float64)
         elif prefer == 2:  # 相似度
             p = np.array([len(list(nx.common_neighbors(population, anchor, x))) for x in population.nodes_iter()],
                          dtype=np.float64)
@@ -70,25 +71,37 @@ class Preference(Adapter):
         population.add_edge(anchor, new)
         return old, new
 
-    def adapt_one(self, population, prefer, anchor):
-        size = len(population)
+    def adapt_once(self, population, prefer, anchor):
         # rewire only one link
-        p = []
-        if prefer == 0:
-            p = np.ones(size)
-        elif prefer == 1:
-            p = np.array(population.degree().values(), dtype=np.float64)
+        size = population.size
+        k = population.degree_list[anchor]
+        edge = population.edges(anchor)[np.random.randint(k)]
+        old = edge[1]
+        if population.degree_list[old] <= self.min_degree:
+            print "=======skip rewire(%d) neigh(%d)'s degree: %d===="%(anchor, old, population.degree(old))
+            return
+        new_list = population.nodes_exclude_neighbors(anchor)
+        if prefer == 1:
+            p = np.array([population.degree_list[x] for x in new_list], dtype=np.float64)
+        elif prefer == 2:
+             p = np.array([len(list(nx.common_neighbors(population, anchor, x))) for x in new_list],
+                          dtype=np.float64)
+             # p += 1         # 防止没有足够公共节点的
+             if p.sum() == 0:
+                p = None
         else:
-            pass
-        p[anchor] = 0
-        p /= float(p.sum())
-        new_neigh = np.random.choice(size, p=p)
-        k = population.degree(anchor)
-        population.remove_edges(population.edges(anchor)[np.random.choice(k)])
-        population.add_edge(anchor, new_neigh)
+            p = None
+        if p is not None:
+            p /= float(p.sum())
+        new = int(np.random.choice(new_list, p=p))
+        population.rewire(anchor, old, new)
 
 
 if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)
     P = Population(G)
     P.fitness = np.random.randint(1, 3, size=100) * 1.0
+    p = Preference()
+    print P.edges(1)
+    p.adapt_once(P, 1, 1)
+    print P.edges(1)

@@ -31,10 +31,18 @@ class Evolution(object):
         self.proportion = None
 
     def generations(self, turns):
+        #init
+        #yield
         for i in xrange(turns):
             self.game.play(self.population)
             (birth, death) = self.rule.update(self.population)
             yield i, birth, death
+
+    def evolve_a(self, turns):
+        map(self.ggg, xrange(turns))
+
+    def ggg(self, i):
+        return self.generation + i
 
     def evolve_yield(self, turns, profile=None):
         for i, birth, death in self.generations(turns):
@@ -83,9 +91,8 @@ class Evolution(object):
             # 统计
             if i == 0:
                 self.proportion[0] = self.population.cooperation_rate()
-                # self.proportion[0] = self.size - np.count_nonzero(self.strategy)
             else:
-                self.proportion[i] = self.proportion[i - 1] + self.population.strategy[death] - new_strategy
+                self.proportion[i] = self.proportion[i-1]+self.population.strategy[death]-new_strategy
 
             # 更新策略
             if self.population.strategy[death] == new_strategy:
@@ -202,6 +209,9 @@ class CoEvolution(Evolution):
     # 共演过程
     def evolve(self, turns, profile=None):
         # super(self.__class__, self).evolve(turns, profile)
+        # 初始化
+        self.strategy = np.random.randint(2, size=self.size)
+        self.fitness = np.empty(self.size, dtype=np.double)
         # 演化记录
         self.proportion = [0] * turns
         self.evl = np.zeros((self.s_size, turns), dtype=np.int)
@@ -237,7 +247,7 @@ class CoEvolution(Evolution):
             self.population.strategy[death] = new_s
             self.evolve_strategies[death] = new_s_e
 
-            self.coevolve.rewire_one(self.population, self.evolve_strategies[death], death)
+            self.coevolve.adapt_once(self.population, self.evolve_strategies[death], death)
 
             if (i+1) % profile == 0:
                 print('turn:'+str(i+1))
