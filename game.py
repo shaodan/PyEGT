@@ -11,19 +11,23 @@ class Game(object):
     """base_class_of_game"""
 
     def __init__(self):
-        pass
+        self.rank = 2
 
     # 博弈过程，必须继承
     def play(self, population, node_list=None, edge_list=None):
         if node_list is None:
             # 初始化fitness，整体进行一次博弈
-            pass
+            self.init_play(population)
         elif node_list:
             # 局部更新
             self.fast_play(population, node_list, edge_list)
 
+    def init_play(self, population):
+        pass
+
     def fast_play(self, population, node_list, edge_list=None):
         # todo : 会有精度差别 10^-16~-15数量级
+        # 考虑一定循环之后整体计算修正
         if not isinstance(node_list, list):
             # 先转换成list
             node_list = [node_list]
@@ -160,9 +164,9 @@ if __name__ == '__main__':
     P.fitness = fit2
     g.play(P)
 
-    print "=======delta==========="
+    print "=======delta======="
     print (fit1-fit2)
-    print "=======sum==========="
+    print "=======sum========="
     print (fit1-fit2).sum()
 
     print (fit1[i] - fit2[i])
