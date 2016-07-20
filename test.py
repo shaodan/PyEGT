@@ -90,15 +90,24 @@ def test_attr_addressing():
 
 
 def test_edge_size():
-    setup = 'import networkx as nx;P=nx.random_graphs.watts_strogatz_graph(2000, 10, 0.3);'
+    setup = 'import networkx as nx;P=nx.random_graphs.watts_strogatz_graph(2000, 100, 0.3);'
     t1 = timeit.Timer('sum([len(item.values()) for item in P.adj.values()]) / 2', setup)
     t2 = timeit.Timer('len(P.edges())', setup)
     print t1.timeit(10)/10
     print t2.timeit(10)/10
 
 
+def test_random_edge():
+    setup = 'import networkx as nx;import numpy as np;P=nx.random_graphs.watts_strogatz_graph(2000, 100, 0.3);size=len(P);print size;print len(P.edges());'
+    t1 = timeit.Timer('np.random.randint(size, size=2)', setup)
+    t2 = timeit.Timer('edge=P.edges();edge[np.random.choice(len(edge))]', setup)
+    print t1.timeit(10)/10
+    print t2.timeit(10)/10
+
+
 # test_attr_addressing()
-test_edge_size()
+# test_edge_size()
+test_random_edge()
 
 # test_random()
 # test_sum

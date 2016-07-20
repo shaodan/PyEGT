@@ -73,10 +73,7 @@ class Preference(Adapter):
 
     def adapt_once(self, population, prefer, anchor):
         # rewire only one link
-        size = population.size
-        k = population.degree_list[anchor]
-        edge = population.edges(anchor)[np.random.randint(k)]
-        old = edge[1]
+        old = population.random_neighbor(anchor)
         if population.degree_list[old] <= self.min_degree:
             print "=======skip rewire(%d) neigh(%d)'s degree: %d===="%(anchor, old, population.degree(old))
             return

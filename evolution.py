@@ -24,13 +24,13 @@ class Evolution(object):
         self.rule = update_rule
         self.size = len(graph)
         # 迭代次数，中断续演
-        self.generation = 0
+        self.gen = 0
         # 是否突变
         self.has_mut = has_mut
         # 合作率记录
         self.proportion = None
 
-    def generations(self, turns):
+    def generation_iter(self, turns):
         #init
         #yield
         for i in xrange(turns):
@@ -42,7 +42,7 @@ class Evolution(object):
         map(self.ggg, xrange(turns))
 
     def ggg(self, i):
-        return self.generation + i
+        return self.gen + i
 
     def evolve_yield(self, turns, profile=None):
         for i, birth, death in self.generations(turns):
@@ -64,9 +64,9 @@ class Evolution(object):
                 self.population.strategy[death] = new_strategy
 
             # 记录总演化轮数
-            self.generation += 1
-            if self.generation % profile == 0:
-                print('turn:'+str(self.generation))
+            self.gen += 1
+            if self.gen % profile == 0:
+                print('turn:'+str(self.gen))
 
     # 演化过程
     def evolve(self, turns, profile=None):
@@ -101,9 +101,9 @@ class Evolution(object):
                 self.population.strategy[death] = new_strategy
 
             # 记录总演化轮数
-            self.generation += 1
-            if self.generation % profile == 0:
-                print('turn:'+str(self.generation))
+            self.gen += 1
+            if self.gen % profile == 0:
+                print('turn:'+str(self.gen))
 
     # 时间同步演化
     def evolve_syn(self, turns, profile=None):
@@ -134,9 +134,9 @@ class Evolution(object):
             self.population.strategy[death] = new_strategy
 
             # 记录总演化轮数
-            self.generation += 1
-            if self.generation % profile == 0:
-                print('turn:'+str(self.generation))
+            self.gen += 1
+            if self.gen % profile == 0:
+                print('turn:'+str(self.gen))
 
     def show(self):
         plt.figure(1)
@@ -164,16 +164,16 @@ class Evolution(object):
         if not os.path.exists(path):
             os.makedirs(path)
         self.save_pajek(path)
-        sio.savemat(path+'/data.mat', mdict={'generation': self.generation,
-                                             'fitness': self.population.fitness,
-                                             'strategy': self.population.strategy,
+        sio.savemat(path+'/data.mat', mdict={'gen': self.gen,
+                                             'fit': self.population.fitness,
+                                             'stg': self.population.strategy,
                                              'log': self.proportion})
 
     def load(self, path):
         self.load_pajek(path)
-        mat = sio.loadmat(path+'/data.mat', mdict={'generation': self.generation,
-                                                   'fitness': self.population.fitness,
-                                                   'strategy': self.population.strategy,
+        mat = sio.loadmat(path+'/data.mat', mdict={'gen': self.gen,
+                                                   'fit': self.population.fitness,
+                                                   'stg': self.population.strategy,
                                                    'log': self.proportion})
         self.population.fitness = mat['fitness']
         self.population.strategy = mat['strategy']

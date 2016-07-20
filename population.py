@@ -45,17 +45,23 @@ class Population(nx.Graph):
     #     self.degree_list[u] -= 1
     #     self.degree_list[v] -= 1
 
+    def edge_size(self):
+        # see test.py test_edge_size()
+        return sum([len(adj.values()) for adj in self.adj.values()]) / 2
+
     def add_node(self, node):
+        # override, alter size, only use for UniTest
         super(self.__class__, self).add_node(node)
         self.size += 1
 
     def nodes_exclude_neighbors(self, node):
         # exclude neighborhoods and node itself
-        all_list = self.nodes()
+        # todo: when size is too big, node.keys() is unordered
+        node_list = self.node.keys()
         for n in self.neighbors_iter(node):
-            all_list[n] = -1
-        all_list[node] = -1
-        return filter(lambda x : x>=0, all_list)
+            node_list[n] = -1
+        node_list[node] = -1
+        return filter(lambda x : x>=0, node_list)
 
     def rewire(self, u, v, w):
         # check if node/edge exist before call
@@ -64,23 +70,28 @@ class Population(nx.Graph):
         self.add_edge(u, w)
         self.degree_list[w] += 1
 
-    def random_node(self, ):
+    def random_neighbor(self, node):
+        neighbors = self.neighbors(node)
+        return np.random.choice(neighbors)
+
+    def random_node(self, size=None):
         # np.random.randint(self.size)
-        np.random.choice(self.node.keys())
+        np.random.choice(self.node.keys(), size)
 
     def choice_node(self, size=None, replace=True, p=None):
         np.random.choice(self.node.keys(), size, replace, p)
 
     def random_edge(self):
         # choice random pair in graph
-        edge_size = sum([len(adj.values()) for adj in self.adj.values()]) / 2
-        total = self.size * (self.size-1) / 2
-        if total / edge_size > 100:
+        # see test.py test_random_edge()
+        # edge_size = self.edge_size()
+        # total = self.size * (self.size-1) / 2
+        # if total / edge_size > 100:
+        birth, death = np.random.randint(self.size, size=2)
+        while birth == death or (not self.has_edge(birth, death)):
             birth, death = np.random.randint(self.size, size=2)
-            while birth == death or (not self.has_edge(birth, death)):
-                birth, death = np.random.randint(self.size, size=2)
-        else:
-            birth, death = self.edges()[np.random.randint(edge_size)]
+        # else:
+            # birth, death = self.edges()[np.random.randint(edge_size)]
         return birth, death
 
     def prepare(self):
@@ -100,7 +111,7 @@ class Population(nx.Graph):
     def draw(self):
         pass
 
-    def degree_histogram(self):
+    def degree_distribution(self):
         degree_h = nx.degree_histogram(self)
         plt.loglog(degree_h, 'b-', marker='o')
 
@@ -112,7 +123,7 @@ if __name__ == '__main__':
     print P.degree()
     print P.edges()
     print list(nx.common_neighbors(P, 0, 1))
-    print 'edge_size:', sum([len(item.values()) for item in P.adj.values()]) / 2, len(P.edges())
+    print 'edge_size:', P.edge_size(), len(P.edges())
 
     G.graph["name"] = "b"
     G.add_node(2000)
