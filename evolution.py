@@ -16,13 +16,12 @@ import game
 
 class Evolution(object):
 
-    def __init__(self, graph, game_type, update_rule, has_mut=True):
-        assert isinstance(game_type, game.Game)
-        assert isinstance(update_rule, rule.Rule)
+    def __init__(self, graph, gametype, updaterule, has_mut=True):
+        assert isinstance(gametype, game.Game)
+        assert isinstance(updaterule, rule.Rule)
         self.population = Population(graph)
-        self.game = game_type
-        self.rule = update_rule
-        self.size = len(graph)
+        self.game = gametype.bind(self.population)
+        self.rule = updaterule.bind(self.population)
         # 迭代次数，中断续演
         self.gen = 0
         # 是否突变
@@ -30,19 +29,25 @@ class Evolution(object):
         # 合作率记录
         self.proportion = None
 
+    def next_generation(self):
+        self.death
+        self.birth
+
     def generation_iter(self, turns):
         #init
         #yield
         for i in xrange(turns):
-            self.game.play(self.population)
-            (birth, death) = self.rule.update(self.population)
+            self.game.play()
+            (birth, death) = self.rule.update()
+            if death == None:
+                death = []
             yield i, birth, death
 
-    def evolve_a(self, turns):
-        map(self.ggg, xrange(turns))
+    # def evolve_a(self, turns):
+    #     map(self.ggg, xrange(turns))
 
-    def ggg(self, i):
-        return self.gen + i
+    # def ggg(self, i):
+    #     return self.gen + i
 
     def evolve_yield(self, turns, profile=None):
         for i, birth, death in self.generations(turns):
@@ -80,8 +85,8 @@ class Evolution(object):
         # 循环
         death = None
         for i in xrange(turns):
-            self.game.play(self.population, death)
-            (birth, death) = self.rule.update(self.population)
+            self.game.play(death)
+            (birth, death) = self.rule.update()
 
             if self.has_mut and np.random.random() <= 0.01:
                 new_strategy = np.random.randint(2)
@@ -116,8 +121,8 @@ class Evolution(object):
                 profile = 10
         # 循环
         for i in xrange(turns):
-            self.game.play(self.population)
-            (birth, death) = self.rule.update(self.population)
+            self.game.play()
+            (birth, death) = self.rule.update()
 
             if self.has_mut and np.random.random() <= 0.01:
                 new_strategy = np.random.randint(2)
@@ -209,13 +214,10 @@ class CoEvolution(Evolution):
     # 共演过程
     def evolve(self, turns, profile=None):
         # super(self.__class__, self).evolve(turns, profile)
-        # 初始化
-        self.strategy = np.random.randint(2, size=self.size)
-        self.fitness = np.empty(self.size, dtype=np.double)
         # 演化记录
         self.proportion = [0] * turns
         self.evl = np.zeros((self.s_size, turns), dtype=np.int)
-        self.evolve_strategies = np.random.randint(self.s_size, size=self.size)
+        self.evolve_strategies = np.random.randint(self.s_size, size=self.population.size)
         # 输出间隔
         if profile is None:
             profile = turns/10
@@ -224,8 +226,8 @@ class CoEvolution(Evolution):
         # 循环
         death = None
         for i in xrange(turns):
-            self.game.play(self.population, death)
-            (birth, death) = self.rule.update(self.population)
+            self.game.play(death)
+            (birth, death) = self.rule.update()
 
             if self.has_mut and np.random.random() > 0.01:
                 new_s = self.population.strategy[birth]
@@ -273,5 +275,6 @@ if __name__ == '__main__':
     G = nx.random_regular_graph(5, 10)
     g = game.PDG()
     u = rule.BirthDeath()
-    p = Evolution(G, g, u)
-    p.evolve(10000)
+    e = Evolution(G, g, u)
+    e.evolve(10000)
+    e.show()

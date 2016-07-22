@@ -10,32 +10,39 @@ import warnings
 
 class Rule(object):
 
-    # 策略更新过程，必须继承
-    # graph网络结构，fitness收益数组
-    def update(self, population):
+    def __init__(self):
         pass
+
+    def bind(self, population):
+        self.population = population
+        self.fitness = population.fitness
+        return self
+
+    # 策略更新过程，必须继承
+    def update(self):
+        raise NotImplementedError( "Should have implemented" )
 
 
 class BirthDeath(Rule):
 
-    def update(self, population):
-        p = population.fitness.clip(min=0)       # todo: PGG存在负收益，忽略这些节点
+    def update(self):
+        p = self.fitness.clip(min=0)       # todo: PGG存在负收益，忽略这些节点
         p = p / p.sum()
-        birth = np.random.choice(population.size, replace=False, p=p)
-        neigh = population.neighbors(birth)
+        birth = np.random.choice(self.population.size, replace=False, p=p)
+        neigh = self.population.neighbors(birth)
         death = np.random.choice(neigh, replace=False)
         return birth, death
 
 
 class DeathBirth(Rule):
 
-    def update(self, population):
-        death = np.random.randint(population.size)
-        neigh = population.neighbors(death)
+    def update(self):
+        death = np.random.randint(self.population.size)
+        neigh = self.population.neighbors(death)
         if len(neigh) == 0:
             print "====no neigh for node:"+str(death)+"===="
             return death, death
-        p = population.fitness[neigh].clip(min=0)
+        p = self.fitness[neigh].clip(min=0)
         if p.sum() == 0:
             p = None
         else:
@@ -46,7 +53,7 @@ class DeathBirth(Rule):
 
 class IM(Rule):
 
-    def update(self, population):
+    def update(self):
         pass
 
 
@@ -56,9 +63,11 @@ class Fermi(Rule):
         self.K = k
         np.seterr(over='warn')
 
-    def update(self, population):
-        birth, death = population.random_edge()
-        if 1 / (1+np.exp((population.fitness[death]-population.fitness[birth])/self.K)) > np.random.random():
+    def update(self):
+        birth, death = self.population.random_edge()
+        # fermi转移概率公式
+        if 1/(1+np.exp((self.fitness[death]-self.fitness[birth])/self.K)) < np.random.random():
+            # 更新失败
             death = birth
         return birth, death
 
@@ -72,10 +81,10 @@ class HeteroFermi(Rule):
         # for sh delta = R-S
         self.delta = delta
 
-    def update(self, population):
-        birth, death = population.random_edge()
-        degree = max(population.degree_list[birth], population.degree_list[death])
-        if (population.fitness[death]-population.fitness[birth]) / (self.delta * degree) > np.random.random():
+    def update(self):
+        birth, death = self.population.random_edge()
+        degree = max(self.population.degree_list[birth], self.population.degree_list[death])
+        if (self.fitness[birth]-self.fitness[death])/(self.delta*degree) < np.random.random():
             death = birth
         return birth, death
 
@@ -83,11 +92,11 @@ if __name__ == '__main__':
     G = nx.random_regular_graph(5, 100)
     P = Population(G)
     P.fitness = np.random.randint(1, 3, size=100) * 1.0
-    bd = BirthDeath()
-    A = bd.update(P)
-    fermi = Fermi()
-    B = fermi.update(P)
-    print(A)
+    bd = BirthDeath().bind(P)
+    A = bd.update()
+    fermi = Fermi().bind(P)
+    B = fermi.update()
+    print A
     print G.has_edge(A[0], A[1])
     print B
     print G.has_edge(B[0], B[1])

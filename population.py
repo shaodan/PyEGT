@@ -11,12 +11,27 @@ import os
 class Population(nx.Graph):
     """
     Structure of population as a graph
+    Requirement:
+        nodes are int, range from 0 to len(graph)-1
+        node.keys() should keep in order, so size cannot be too big
+        nodes cannot be alter after initlized
+        edges can only be rewired, so total degree is const
     """
     def __init__(self, graph):
-        assert isinstance(graph, nx.Graph)
-        super(self.__class__, self).__init__(graph)
-        # nx.convert_node_labels_to_integers(self)
-        self.size = len(graph)
+        if isinstance(graph, nx.Graph):
+            super(self.__class__, self).__init__(graph)
+        elif isinstance(graph, str):
+            super(self.__class__, self).__init__()
+            self.load_graph(graph)
+        elif isinstance(graph, list):
+            super(self.__class__, self).__init__()
+            self.load_graph(*graph)
+        elif isinstance(graph, dict):
+            super(self.__class__, self).__init__()
+            self.load_graph(**graph)
+        else:
+            raise TypeError("Population initializer need nx.Graph or data file path")
+        self.size = len(self.node)
         # todo: what if degree is not sorted
         self.degree_list = self.degree().values()
         # data of node is stored in dict which is memory inefficient
@@ -24,6 +39,10 @@ class Population(nx.Graph):
         self.fitness = np.empty(self.size, dtype=np.double)
         # 策略: 0合作， 1背叛
         self.strategy = np.random.randint(2, size=self.size)
+
+    def dynamic(self, amount):
+        # 共演策略，见adapter.py
+        self.dynamic = np.random.randint(amount, size=self.size)
 
     def shallow_copy(self, graph):
         # todo : gc
@@ -48,11 +67,6 @@ class Population(nx.Graph):
     def edge_size(self):
         # see test.py test_edge_size()
         return sum([len(adj.values()) for adj in self.adj.values()]) / 2
-
-    def add_node(self, node):
-        # override, alter size, only use for UniTest
-        super(self.__class__, self).add_node(node)
-        self.size += 1
 
     def nodes_exclude_neighbors(self, node):
         # exclude neighborhoods and node itself
@@ -95,7 +109,10 @@ class Population(nx.Graph):
         return birth, death
 
     def prepare(self):
+        # data of node is stored in dict which is memory inefficient
+        # use list instead
         self.fitness = np.empty(self.size, dtype=np.double)
+        # 策略: 0合作， 1背叛
         self.strategy = np.random.randint(2, size=self.size)
 
     def cooperation_rate(self):
@@ -103,10 +120,16 @@ class Population(nx.Graph):
         # see test.py test_count_zero()
         return self.size - np.count_nonzero(self.strategy)
 
-    def load_graph(self, path):
+    def load_graph(self, path, delimiter=None, fmt='edge', nodetype=int, data=False):
+        # load graph data file, must
         full_path = os.path.dirname(os.path.realpath(__file__)) + path
-        nx.read_edgelist(full_path, create_using=self, delimiter=',', nodetype=int, data=False)
-        nx.relabel_nodes(self, {self.size: 0}, copy=False)  # 数据从1开始标号，需要转换为0开始记号
+        if 'edge' == fmt: # edge_list
+            nx.read_edgelist(full_path, create_using=self, delimiter=delimiter, nodetype=int, data=False)
+        else: # adj_list
+            nx.read_adjlist(full_path, create_using=self, delimiter=delimiter, nodetype=int)
+        # self.name = path.rsplit('/')[1].split('.')[0]
+        if 0 not in self.node:  # 数据从1开始标号，需要转换为0开始记号
+            nx.relabel_nodes(self, {len(self): 0}, copy=False)
 
     def draw(self):
         pass
@@ -119,6 +142,7 @@ class Population(nx.Graph):
 # TEST CODE HERE
 if __name__ == '__main__':
     G = nx.random_graphs.watts_strogatz_graph(100, 4, 0.3)
+    # g = Population('/../wechat/facebook.txt')
     P = Population(G)
     print P.degree()
     print P.edges()
@@ -127,6 +151,7 @@ if __name__ == '__main__':
 
     G.graph["name"] = "b"
     G.add_node(2000)
+    P.size += 1
     print P.graph
     print len(P)
     P.add_node(2001)
