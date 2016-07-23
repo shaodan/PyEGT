@@ -37,15 +37,14 @@ g = game.PDG()
 # g = game.PGG(3)
 
 # 学习策略
-u = rule.BirthDeath()
-# u = update.DeathBirth()
-# u = update.Fermi()
-# u = update.HeteroFermi(g.delta)
+# u = rule.BirthDeath()
+u = rule.DeathBirth()
+# u = rule.Fermi()
+# u = rule.HeteroFermi(g.delta)
 
 # 演化
 e = evolution.Evolution(G, g, u)
 e.evolve(20000)
-
 
 # 重复实验，得到关系图
 def repeat(times):
@@ -63,4 +62,4 @@ def repeat(times):
 # 画图
 e.show()
 # 分析节点最终fit和结构参数的关系
-# e.show_degree()
+# e.degree_distribution()

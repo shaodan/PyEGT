@@ -135,15 +135,52 @@ class Population(nx.Graph):
         pass
 
     def degree_distribution(self):
-        degree_h = nx.degree_histogram(self)
-        plt.loglog(degree_h, 'b-', marker='o')
+
+        # degree_h = nx.degree_histogram(self)
+        # plt.loglog(degree_h, c='g', marker='o')
+
+        import collections, math
+        # To convert normalized degrees to raw degrees
+        raw_data = dict(collections.Counter(self.degree_list))
+        plt.scatter(raw_data.keys(), raw_data.values(), c='b', marker='x')
+
+
+        x = [float(i) for i in raw_data.keys()]
+        y = raw_data.values()
+        max_x = math.log10(max(x))
+        max_y = math.log10(max(y))
+        max_base = max([max_x, max_y])
+
+        min_x = math.log10(min(filter(lambda x : x>0, x)))
+        bins = np.logspace(min_x, max_base, num=50)
+
+        log_x = (np.histogram(x, bins, weights=y)[0] / np.histogram(x, bins)[0])
+        log_y = (np.histogram(x, bins, weights=x)[0] / np.histogram(x, bins)[0])
+
+
+        plt.scatter(log_x, log_y, c='r', marker='s', s=50)
+        plt.xscale('log')
+        plt.yscale('log')
+        # loglog也能画对数坐标，不过是连起来的
+        # plt.loglog(log_x, log_y, c='r', marker='s')
+
+
+        # plt.xlim(0, 1000)
+        # plt.xlim((1e-1, 1e5))
+        # plt.ylim((.9, 1e4))
+
+        plt.xlabel('Degree')
+        plt.ylabel('Frequency')
+        plt.show()
 
 
 # TEST CODE HERE
 if __name__ == '__main__':
-    G = nx.random_graphs.watts_strogatz_graph(100, 4, 0.3)
-    # g = Population('/../wechat/facebook.txt')
+    # G = nx.random_graphs.watts_strogatz_graph(100, 4, 0.3)
+    G = '/../wechat/facebook.txt'
     P = Population(G)
+    P.degree_distribution()
+    exit()
     print P.degree()
     print P.edges()
     print list(nx.common_neighbors(P, 0, 1))

@@ -34,10 +34,9 @@ class Evolution(object):
         self.birth
 
     def generation_iter(self, turns):
-        #init
-        #yield
+        death = None
         for i in xrange(turns):
-            self.game.play()
+            self.game.play(death)
             (birth, death) = self.rule.update()
             if death == None:
                 death = []
@@ -48,6 +47,9 @@ class Evolution(object):
 
     # def ggg(self, i):
     #     return self.gen + i
+
+    def evolve(self, turns):
+        return 0
 
     def evolve_yield(self, turns, profile=None):
         for i, birth, death in self.generations(turns):
@@ -143,8 +145,8 @@ class Evolution(object):
             if self.gen % profile == 0:
                 print('turn:'+str(self.gen))
 
-    def show(self):
-        plt.figure(1)
+    def show(self, wait=False):
+        f = plt.figure(1)
         plt.plot(self.proportion)
         # x_old = range(len(self.log))
         # x = np.linspace(x_old[0],x_old[-1],300)
@@ -154,7 +156,10 @@ class Evolution(object):
         plt.xlabel('Step')
         plt.ylabel('Cooperation Ratio')
 
-        plt.show()
+        if wait:
+            f.show()
+        else:
+            plt.show()
 
     def show_degree(self):
         # plt.figure(1)
@@ -254,10 +259,9 @@ class CoEvolution(Evolution):
             if (i+1) % profile == 0:
                 print('turn:'+str(i+1))
 
-    def show(self):
-        super(self.__class__, self).show()
-
-        plt.figure(2)
+    def show(self, wait=False):
+        super(self.__class__, self).show(True)
+        f = plt.figure(2)
         color = 'brgcmykw'
         # symb = '.ox+*sdph'
         label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
@@ -267,7 +271,6 @@ class CoEvolution(Evolution):
         plt.xlabel('Step')
         plt.ylabel('Strategies')
         plt.legend()
-
         plt.show()
 
 
