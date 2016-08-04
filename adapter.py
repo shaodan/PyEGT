@@ -14,7 +14,7 @@ class Adapter(object):
 
     # prefer优先策略，anchor重连节点, source?
     def adapt(self, population, prefer, anchor, source=None):
-        pass
+        raise NotImplementedError("Game.init_play() Should have implemented!")
 
 
 class LocalAdapter(Adapter):
@@ -47,22 +47,17 @@ class Preference(Adapter):
         super(self.__class__, self).__init__(order)
 
     def adapt(self, population, prefer, anchor, source=None):
-        size = len(population)
         if anchor is None:
             return None
-        p = []
-        if prefer == 0:    # 随机选择
-            p = np.ones(size)
-        elif prefer == 1:  # 度优先
+        size = len(population)
+        if prefer == 1:  # 度优先
             p = np.array(population.degree_list, dtype=np.float64)
         elif prefer == 2:  # 相似度
             p = np.array([len(list(nx.common_neighbors(population, anchor, x))) for x in population.nodes_iter()],
                          dtype=np.float64)
             p += 1         # 防止没有足够公共节点的
-        elif prefer == 3:
-            pass
-        elif prefer == 4:
-            pass
+        else:
+            p = None
         p[anchor] = 0
         p /= float(p.sum())
         old = np.random.choice(population.neighbors(anchor))
@@ -76,7 +71,7 @@ class Preference(Adapter):
         old = population.random_neighbor(anchor)
         if population.degree_list[old] <= self.min_degree:
             print "=======skip rewire(%d) neigh(%d)'s degree: %d===="%(anchor, old, population.degree(old))
-            return
+            return 0, 0
         new_list = population.nodes_exclude_neighbors(anchor)
         if prefer == 1:
             p = np.array([population.degree_list[x] for x in new_list], dtype=np.float64)
@@ -92,6 +87,7 @@ class Preference(Adapter):
             p /= float(p.sum())
         new = int(np.random.choice(new_list, p=p))
         population.rewire(anchor, old, new)
+        return old, new
 
 
 if __name__ == '__main__':

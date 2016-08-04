@@ -51,10 +51,21 @@ class DeathBirth(Rule):
         return birth, death
 
 
-class IM(Rule):
+class Imitation(Rule):
 
     def update(self):
-        pass
+        strategy = self.population.strategy.copy()
+        # rand_array = np.random.random(self.population.size)
+        for node in self.population.nodes_iter():
+            neighbors = self.population.neighbors(node)
+            max_fit = self.fitness[node]
+            max_ind = node
+            for n in neighbors:
+                if self.fitness[n] > max_fit:
+                    max_ind = n
+                    max_fit = self.fitness[n]
+            strategy[node] = strategy[n]
+        self.population.strategy = strategy
 
 
 class Fermi(Rule):
@@ -66,7 +77,8 @@ class Fermi(Rule):
     def update(self):
         birth, death = self.population.random_edge()
         # fermi转移概率公式
-        if 1/(1+np.exp((self.fitness[death]-self.fitness[birth])/self.K)) < np.random.random():
+        probability = 1/(1+np.exp((self.fitness[death]-self.fitness[birth])/self.K))
+        if np.random.random() > probability:
             # 更新失败
             death = birth
         return birth, death
@@ -84,7 +96,8 @@ class HeteroFermi(Rule):
     def update(self):
         birth, death = self.population.random_edge()
         degree = max(self.population.degree_list[birth], self.population.degree_list[death])
-        if (self.fitness[birth]-self.fitness[death])/(self.delta*degree) < np.random.random():
+        probability = (self.fitness[birth]-self.fitness[death])/(self.delta*degree)
+        if np.random.random() > probability:
             death = birth
         return birth, death
 
@@ -96,6 +109,8 @@ if __name__ == '__main__':
     A = bd.update()
     fermi = Fermi().bind(P)
     B = fermi.update()
+    # im = Imitation().bind(P)
+    # C = im.update()
     print A
     print G.has_edge(A[0], A[1])
     print B

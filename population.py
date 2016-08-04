@@ -30,7 +30,7 @@ class Population(nx.Graph):
             super(self.__class__, self).__init__()
             self.load_graph(**graph)
         else:
-            raise TypeError("Population initializer need nx.Graph or data file path")
+            raise TypeError("Population initializer need nx.Graph or data file")
         self.size = len(self.node)
         # todo: what if degree is not sorted
         self.degree_list = self.degree().values()
@@ -39,6 +39,8 @@ class Population(nx.Graph):
         self.fitness = np.empty(self.size, dtype=np.double)
         # 策略: 0合作， 1背叛
         self.strategy = np.random.randint(2, size=self.size)
+        # 初始合作率
+        self.cooperation_rate()
 
     def dynamic(self, amount):
         # 共演策略，见adapter.py
@@ -90,22 +92,20 @@ class Population(nx.Graph):
 
     def random_node(self, size=None):
         # np.random.randint(self.size)
-        np.random.choice(self.node.keys(), size)
+        return np.random.choice(self.node.keys(), size)
 
     def choice_node(self, size=None, replace=True, p=None):
-        np.random.choice(self.node.keys(), size, replace, p)
+        return np.random.choice(self.node.keys(), size, replace, p)
 
     def random_edge(self):
         # choice random pair in graph
         # see test.py test_random_edge()
-        # edge_size = self.edge_size()
-        # total = self.size * (self.size-1) / 2
-        # if total / edge_size > 100:
+        # total = self.size*(self.size-1)/2
+        # if total / self.edge_size() > 100:
+            # return self.edges()[np.random.randint(edge_size)]
         birth, death = np.random.randint(self.size, size=2)
         while birth == death or (not self.has_edge(birth, death)):
             birth, death = np.random.randint(self.size, size=2)
-        # else:
-            # birth, death = self.edges()[np.random.randint(edge_size)]
         return birth, death
 
     def prepare(self):
@@ -115,10 +115,15 @@ class Population(nx.Graph):
         # 策略: 0合作， 1背叛
         self.strategy = np.random.randint(2, size=self.size)
 
-    def cooperation_rate(self):
+    def cooperation_rate(self, increase=None):
         # count_nonzero() is faster than (self.strategy == 0).sum()
         # see test.py test_count_zero()
-        return self.size - np.count_nonzero(self.strategy)
+        # self.size - np.count_nonzero(self.strategy)
+        if increase is None:
+            self.rate = self.size - np.count_nonzero(self.strategy)
+        else:
+            self.rate += increase
+        return self.rate
 
     def load_graph(self, path, delimiter=None, fmt='edge', nodetype=int, data=False):
         # load graph data file, must
@@ -131,8 +136,12 @@ class Population(nx.Graph):
         if 0 not in self.node:  # 数据从1开始标号，需要转换为0开始记号
             nx.relabel_nodes(self, {len(self): 0}, copy=False)
 
-    def draw(self):
-        pass
+    def draw(self, save=False):
+        pos=nx.spring_layout(self)
+        nx.draw_networkx(self, pos, node_size=20)
+        plt.show()
+        if save:
+            plt.savefig(self.name+".png")
 
     def degree_distribution(self):
 

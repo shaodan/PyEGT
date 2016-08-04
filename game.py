@@ -40,6 +40,13 @@ class Game(object):
         # 考虑一定循环之后整体计算修正
         raise NotImplementedError("Game.fast_play() Should have implemented!")
 
+    def error(self, death):
+        self.fast_play(death)
+        fit_fast = self.fitness.copy()
+        self.init_play()
+        fit_init = self.fitness
+        return (fit_fast-fit_init).sum()
+
 
 class PGG(Game):
     """public_goods_game"""
@@ -63,6 +70,12 @@ class PGG(Game):
             b = self.r * (len(neighs)-np.count_nonzero(self.strategy[neighs])) / (degree+1)
             for neigh in neighs:
                 self.fitness[neigh] += b
+
+    # def play(self, node, rewire_edge):
+    #     for edge in rewire_edge:
+    #         if edge[2] == 0:
+    #             pass
+
 
     def fast_play(self, node_list, edge_list=None):
         for node in node_list:
@@ -129,6 +142,16 @@ class PDG(Game):
 
     def fast_play(self, node_list, edge_list=None):
         # 只用计算新节点和其邻居节点的收益
+        for edge in edge_list:
+            a = edge[0]
+            b = edge[1]
+            p = self.payoff[self.strategy[a]][self.strategy[b]]
+            if edge[2] == 0:
+                self.fitness[a] -= p[0]
+                self.fitness[b] -= p[0]
+            else:
+                self.fitness[a] += p[0]
+                self.fitness[b] += p[0]
         for node in node_list:
             f = 0  # 新节点收益从0计算
             s = self.strategy[node]
