@@ -12,6 +12,7 @@ from scipy.interpolate import spline
 from population import Population
 import rule
 import game
+import adapter
 
 
 class Evolution(object):
@@ -27,33 +28,42 @@ class Evolution(object):
         # 是否突变
         self.has_mut = has_mut
         # 合作率记录
-        self.proportion = None
+        self.cooperate = None
 
-    def next_generation(self):
+    def next_generation(self, i):
         # play game
-        self.game.play(self.death)
+        self.game.play(self.death, self.rewired)
+        # self.game.play()
+
+        # update rule
+        (birth, death) = self.rule.update()
+
+        # mutation
+        if self.has_mut and np.random.random() <= 0.01:
+            new_s = np.random.randint(2)
+            mutate = True
+        else:
+            new_s = self.population.strategy[birth]
+            mutate = False
 
         # update strategy
-        (birth, death) = self.rule.update()
-        if self.has_mut and np.random.random() <= 0.01:
-            new_strategy = np.random.randint(2)
-        else:
-            new_strategy = self.population.strategy[birth]
-
-        if new_strategy == self.population.strategy[death]:
+        if new_s == self.population.strategy[death]:
             increase = 0
-            death = []
         else:
-            self.population.strategy[death] = new_strategy
-            increase = new_strategy*2-1
+            self.population.strategy[death] = new_s
+            increase = 1-new_s*2
 
+        self.birth = birth
         self.death = death
-        # record cooperation rate path
-        return self.population.cooperation_rate(increase)
+
+        # record cooperation rate change
+        self.cooperate[i] = self.population.cooperate(increase)
+        return increase, mutate
 
     def evolve(self, turns, profile=None):
         self.death = None
-        self.proportion = [0] * turns
+        self.rewired = None
+        self.cooperate = [0] * turns
 
         if profile is None:
             profile = turns/10
@@ -61,13 +71,15 @@ class Evolution(object):
                 profile = 10
 
         for i in xrange(turns):
-            self.proportion[i] = self.next_generation()
             self.gen += 1
             if self.gen % profile == 0:
-                self.death = None
-                # print('accumulative error:'+self.game.error(death))
-                death = None
-                print('turn:%d/%d'%(self.gen, turns))
+                print('turn: %d/%d'%(self.gen, turns))
+                print(self.death, self.rewired, ' error:', self.game.acc_error(self.death, self.rewired))
+                self.death = -1
+                self.rewired = None
+            inc, _ = self.next_generation(i)
+            if inc == 0:
+                self.death = -1
         # self.show()
 
     # 同步演化
@@ -78,7 +90,7 @@ class Evolution(object):
     # 变化趋势
     def show(self, wait=False):
         f = plt.figure(1)
-        plt.plot(self.proportion)
+        plt.plot(self.cooperate)
         # x_old = range(len(self.log))
         # x = np.linspace(x_old[0],x_old[-1],300)
         # y = spline(x_old,self.log,x)
@@ -110,7 +122,7 @@ class Evolution(object):
         sio.savemat(path+'/data.mat', mdict={'gen': self.gen,
                                              'fit': self.population.fitness,
                                              'stg': self.population.strategy,
-                                             'log': self.proportion})
+                                             'log': self.cooperate})
 
     # 读取演化结果
     def load(self, path):
@@ -118,10 +130,10 @@ class Evolution(object):
         mat = sio.loadmat(path+'/data.mat', mdict={'gen': self.gen,
                                                    'fit': self.population.fitness,
                                                    'stg': self.population.strategy,
-                                                   'log': self.proportion})
+                                                   'log': self.cooperate})
         self.population.fitness = mat['fitness']
         self.population.strategy = mat['strategy']
-        self.proportion = mat['log']
+        self.cooperate = mat['log']
 
     def save_pajek(self, path):
         nx.write_pajek(self.population, path+'/graph.net')
@@ -142,70 +154,32 @@ class StaticStrategy(Evolution):
 
 class CoEvolution(Evolution):
 
-    def __init__(self, graph, gametype, updaterule, adapter):
-        super(self.__class__, self).__init__(graph, gametype, updaterule)
-        assert(isinstance(adapter, adapter.Adapter))
-        self.coevolve = adapter
-        self.s_size = adapter.order
-        self.preference = None
-        self.evl = None
+    def __init__(self, graph, gametype, updaterule, adapterule, has_mut=True):
+        assert(isinstance(adapterule, adapter.Adapter))
+        super(self.__class__, self).__init__(graph, gametype, updaterule, has_mut)
+        self.adapter = adapterule.bind(self.population)
+        # 连接策略记录
+        self.prefer = None
 
-    def next_generation(self):
-        proportion = super(self.__class__, self).next_generation()
-        new_s_e = np.random.randint(self.s_size) if self.has_mut else self.preference[birth]
+    def next_generation(self, i):
+        inc, mutate = super(self.__class__, self).next_generation(i)
+        new_p = np.random.randint(self.adapter.category) if mutate else self.population.dynamic[self.birth]
+        old_p = self.population.dynamic[self.death]
+        if new_p==old_p:
+            old_p = None
+        else:
+            self.population.dynamic[self.death] = new_p
+        self.prefer[i] = self.population.prefer(old_p, new_p)
+        old, new = self.adapter.adapt_once(self.death)
+        if old != new:
+            self.rewired = (self.death, old, new)
+        return inc, mutate
 
-        for m in xrange(self.s_size):
-            self.evl[m][i] = (self.preference == m).sum()
-        old, new = self.coevolve.adapt_once(self.population, self.preference[death], death)
-        return proportion
 
-    def evolve_next(self, turns, profile=None):
-        self.preference = np.random.randint(self.s_size, size=self.population.size)
-        self.evl = np.zeros((self.s_size, turns), dtype=np.int)
-        super(self.__class__, self).evolve(turns, profile)
-
-    # 共演过程
     def evolve(self, turns, profile=None):
-        # 演化记录
-        self.proportion = [0] * turns
-        self.evl = np.zeros((self.s_size, turns), dtype=np.int)
-        self.preference = np.random.randint(self.s_size, size=self.population.size)
-        # 输出间隔
-        if profile is None:
-            profile = turns/10
-            if profile < 1:
-                profile = 10
-        # 循环
-        death = None
-        for i in xrange(turns):
-            self.game.play(death)
-            (birth, death) = self.rule.update()
+        self.prefer = np.zeros((turns, self.adapter.category), dtype=np.int)
 
-            if self.has_mut and np.random.random() > 0.01:
-                new_s = self.population.strategy[birth]
-                new_s_e = self.preference[birth]
-            else:
-                new_s = np.random.randint(2)
-                new_s_e = np.random.randint(self.s_size)
-
-            # 统计绘图
-            if i == 0:
-                self.proportion[0] = self.population.cooperation_rate()
-            else:
-                self.proportion[i] = self.proportion[i-1] + self.population.strategy[death]-new_s
-
-            for m in xrange(self.s_size):
-                self.evl[m][i] = (self.preference == m).sum()
-
-            # 更新策略
-            self.population.strategy[death] = new_s
-            self.preference[death] = new_s_e
-
-            old, new = self.coevolve.adapt_once(self.population, self.preference[death], death)
-            self.rewired = (old, new)
-
-            if (i+1) % profile == 0:
-                print('turn:'+str(i+1))
+        super(self.__class__, self).evolve(turns, profile)
 
     def show(self, wait=False):
         super(self.__class__, self).show(True)
@@ -213,8 +187,8 @@ class CoEvolution(Evolution):
         color = 'brgcmykw'
         # symb = '.ox+*sdph'
         label = ['random', 'popularity', 'knn', 'pop*sim', 'similarity']
-        for i in xrange(self.s_size):
-            plt.plot(self.evl[:][i], color[i], label=label[i])
+        for i in xrange(self.adapter.category):
+            plt.plot(self.prefer[:,i], color[i], label=label[i])
         plt.title('CoEvolutionary Game')
         plt.xlabel('Step')
         plt.ylabel('Strategies')
