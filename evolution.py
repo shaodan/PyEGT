@@ -80,7 +80,6 @@ class Evolution(object):
             inc, _ = self.next_generation(i)
             if inc == 0:
                 self.death = -1
-        # self.show()
 
     # 同步演化
     def evolve_syn(self, turns, profile=None):
@@ -98,6 +97,7 @@ class Evolution(object):
         plt.title('Evolutionary Game')
         plt.xlabel('Step')
         plt.ylabel('Cooperation Ratio')
+        plt.ylim([0,self.population.size])
 
         if wait:
             f.show()
@@ -173,12 +173,13 @@ class CoEvolution(Evolution):
         old, new = self.adapter.adapt_once(self.death)
         if old != new:
             self.rewired = (self.death, old, new)
+        else:
+            self.rewired = None
         return inc, mutate
 
 
     def evolve(self, turns, profile=None):
         self.prefer = np.zeros((turns, self.adapter.category), dtype=np.int)
-
         super(self.__class__, self).evolve(turns, profile)
 
     def show(self, wait=False):

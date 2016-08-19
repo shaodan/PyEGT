@@ -20,7 +20,7 @@ class Rule(object):
 
     # 策略更新过程，必须继承
     def update(self):
-        raise NotImplementedError( "Should have implemented" )
+        raise NotImplementedError("Rule.update() Should have implemented")
 
 
 class BirthDeath(Rule):

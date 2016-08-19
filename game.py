@@ -69,15 +69,8 @@ class PGG(Game):
                 self.fitness[neigh] += b
 
     def fast_play(self, node, rewire=None):
-        if rewire is not None:
-            old = rewire[0]
-            new = rewire[1]
-            self.fitness[node] += 1
-            for neigh in self.population.neighbors_iter(node):
-                self.fitness[neigh] += (self.strategy[old]-self.strategy[new])/self.population.degree_list[node]
-            for neigh in self.population.neighbors_iter(old):
-                pass
-
+        if node < 0:
+            return
         s = self.strategy[node]
         sign = (1 - 2*s)
         sign_r = sign * self.r
@@ -109,19 +102,20 @@ class PGG2(PGG):
                 self.fitness[neigh] += b
 
     def fast_play(self, node, rewire=None):
-        for node in node:
-            s = self.strategy[node]
-            d = self.population.degree_list[node]
-            sign = (1 - 2*s)
-            sign_r = sign * self.r / (d+1)
-            # 更新节点作为中心pgg产生的收益增量
-            delta = sign_r/(d+1)
-            self.fitness[node] += delta - sign
-            for neigh in self.population.neighbors_iter(node):
-                delta_neigh = sign_r/(self.population.degree_list[neigh]+1)
-                self.fitness[neigh] += delta + delta_neigh
-                for neigh_neigh in self.population.neighbors_iter(neigh):
-                    self.fitness[neigh_neigh] += delta_neigh
+        if node < 0:
+            return
+        s = self.strategy[node]
+        d = self.population.degree_list[node]
+        sign = (1 - 2*s)
+        sign_r = sign * self.r / (d+1)
+        # 更新节点作为中心pgg产生的收益增量
+        delta = sign_r/(d+1)
+        self.fitness[node] += delta - sign
+        for neigh in self.population.neighbors_iter(node):
+            delta_neigh = sign_r/(self.population.degree_list[neigh]+1)
+            self.fitness[neigh] += delta + delta_neigh
+            for neigh_neigh in self.population.neighbors_iter(neigh):
+                self.fitness[neigh_neigh] += delta_neigh
 
 
 class PDG(Game):

@@ -80,7 +80,7 @@ class Preference(Adapter):
         prefer = self.dynamic[anchor]
         old = population.random_neighbor(anchor)
         if population.degree_list[old] <= self.min_degree:
-            print "=======skip rewire(%d) neigh(%d)'s degree: %d===="%(anchor, old, population.degree(old))
+            print "=======skip rewire(%d) neigh(%d) min degree===="%(anchor, old)
             return 0, 0
         new_list = population.nodes_exclude_neighbors(anchor)
         if prefer == 1:

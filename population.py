@@ -20,7 +20,6 @@ class Population(nx.Graph):
 
     def __init__(self, graph, copy=True):
         """
-
         :param graph: file
         :param copy:
         """
