@@ -70,7 +70,22 @@ class PGG(Game):
 
     def fast_play(self, node, rewire=None):
         if node < 0:
+            if rewire is None:
+                return
+            # 2 r
+            node, old, new = rewire
+            s = self.strategy[node]
+            s_ = s
+            f = 0
+            k_old = self.population.degree_list[old]
+            for n in self.population.neighbors_iter(old):
+                f += s/(k_old)
+            self.fitness[node] += self.file
             return
+        if rewire is  None:
+            # 1 s
+            return
+        # 3 r+s
         s = self.strategy[node]
         sign = (1 - 2*s)
         sign_r = sign * self.r
@@ -121,8 +136,10 @@ class PGG2(PGG):
 class PDG(Game):
     """prisoner's_dilemma_game"""
 
-    def __init__(self, r=1, t=1.5, s=0, p=0.1):
+    def __init__(self, b, c=1, r=1, t=1.5, s=0, p=0.1):
         super(self.__class__, self).__init__()
+        if b is not None:
+            r, s, t, p = b-c, -c, b, 0
         self.payoff = np.array([[(r, r), (s, t)], [(t, s), (p, p)]], dtype=np.double)
         self.delta = t-s
 

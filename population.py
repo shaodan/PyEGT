@@ -12,10 +12,10 @@ class Population(nx.Graph):
     """
     Structure of population as a graph
     Requirement:
-        nodes are int, range from 0 to len(graph)-1
-        node.keys() should keep in order, so size cannot be too big
-        nodes cannot be alter after initlized
-        edges can only be rewired, so total degree is constant
+        nodes are int, range from 0 to len(graph)-1 sequentially
+        **node.keys() should keep in order, so size cannot be too big**
+        node cannot be alter after initlized
+        edge can only be rewired, so total degree is constant
     """
 
     def __init__(self, graph, copy=True):
@@ -41,8 +41,7 @@ class Population(nx.Graph):
         else:
             raise TypeError("Population initializer need nx.Graph or data file")
         self.size = len(self.node)
-        # todo: what if degree is not sorted
-        self.degree_list = self.degree().values()
+        self.degree_list = self.degree_to_list()
         # data stored in dict is memory inefficient, so use list
         self.fitness = np.empty(self.size, dtype=np.double)
 
@@ -52,6 +51,12 @@ class Population(nx.Graph):
         self.node = graph.node
         self.adj = graph.adj
         self.edge = self.adj
+
+    def degree_to_list(self):
+        degree_list = [0] * len(self.node)
+        for k, v in self.degree().items():
+            degree_list[k] = v
+        return degree_list
 
     def rbind_game(self, game):
         # 两种策略: 0合作，1背叛
@@ -154,7 +159,10 @@ class Population(nx.Graph):
             plt.savefig(self.name+".png")
 
     def degree_distribution(self):
-
+        '''
+        log bin plot
+        http://stackoverflow.com/questions/16489655/plotting-log-binned-network-degree-distributions
+        '''
         # degree_h = nx.degree_histogram(self)
         # plt.loglog(degree_h, c='g', marker='o')
 
@@ -195,9 +203,9 @@ if __name__ == '__main__':
     # G = nx.random_graphs.watts_strogatz_graph(100, 4, 0.3)
     G = '/../wechat/facebook.txt'
     P = Population(G)
-    P.degree_distribution()
-    exit()
+    # P.degree_distribution(); exit()
     print P.degree()
+    print P.degree_to_list()
     print P.edges()
     print list(nx.common_neighbors(P, 0, 1))
     print 'edge_size:', P.edge_size(), len(P.edges())
@@ -212,4 +220,4 @@ if __name__ == '__main__':
 
     a = P.neighbors(0)
     b = P.nodes_exclude_neighbors(0)
-    assert(len(a)+len(b)+1 == P.size)
+    print(len(a)+len(b)+1 == P.size)

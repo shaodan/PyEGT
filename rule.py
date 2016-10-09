@@ -10,8 +10,9 @@ import warnings
 
 class Rule(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, w=0.01):
+        # selection strength
+        self.w = w
 
     def bind(self, population):
         self.population = population
@@ -20,13 +21,14 @@ class Rule(object):
 
     # 策略更新过程，必须继承
     def update(self):
-        raise NotImplementedError("Rule.update() Should have implemented")
+        raise NotImplementedError("Rule.update() should be implemented")
 
 
 class BirthDeath(Rule):
 
     def update(self):
-        p = self.fitness.clip(min=0)       # todo: PGG存在负收益，忽略这些节点
+        p = 1-self.w+self.w*self.fitness
+        # p = self.fitness.clip(min=0)       # todo: PGG存在负收益，忽略这些节点
         p = p / p.sum()
         birth = np.random.choice(self.population.size, replace=False, p=p)
         neigh = self.population.neighbors(birth)
@@ -42,11 +44,13 @@ class DeathBirth(Rule):
         if len(neigh) == 0:
             print "====no neigh for node:"+str(death)+"===="
             return death, death
-        p = self.fitness[neigh].clip(min=0)
-        if p.sum() == 0:
-            p = None
-        else:
-            p = p / p.sum()
+        p = 1-self.w+self.w*self.fitness[neigh]
+        p = p / p.sum()
+        # p = self.fitness[neigh].clip(min=0)
+        # if p.sum() == 0:
+        #     p = None
+        # else:
+        #     p = p / p.sum()
         birth = np.random.choice(neigh, replace=False, p=p)
         return birth, death
 

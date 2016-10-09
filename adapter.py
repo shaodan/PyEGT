@@ -11,6 +11,7 @@ class Adapter(object):
     def __init__(self, category, mindegree=1):
         self.category = category
         self.min_degree = mindegree
+        self.category_words = ['Random', 'Popularity', 'KNN', 'Pop*Sim', 'Similarity']
 
     def bind(self, population):
         population.rbind_adapter(self)
@@ -20,7 +21,7 @@ class Adapter(object):
 
     # prefer优先策略，anchor重连节点, source?
     def adapt(self, anchor, source=None):
-        raise NotImplementedError("Game.init_play() Should have implemented!")
+        raise NotImplementedError("Game.init_play() Should be implemented!")
 
 
 class LocalAdapter(Adapter):
