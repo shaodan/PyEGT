@@ -27,8 +27,9 @@ class Rule(object):
 class BirthDeath(Rule):
 
     def update(self):
+        # weak-strength selection
         p = 1-self.w+self.w*self.fitness
-        # p = self.fitness.clip(min=0)       # todo: PGG存在负收益，忽略这些节点
+        # p = self.fitness.clip(min=0)       # ignore nodes with negative payoff
         p = p / p.sum()
         birth = np.random.choice(self.population.size, replace=False, p=p)
         neigh = self.population.neighbors(birth)
@@ -46,6 +47,17 @@ class DeathBirth(Rule):
             return death, death
         p = 1-self.w+self.w*self.fitness[neigh]
         p = p / p.sum()
+        for i, p_ in enumerate(p):
+            if p_ <= 0:
+                node = neigh[i]
+                print self.fitness[node]
+                nn =  self.population.neighbors(node)
+                print self.population.strategy[node]
+                nf = self.population.strategy[nn]
+                nd = nf.sum()
+                nc = len(nf) - nd
+                print 4*nc - nd
+                exit(0)
         # p = self.fitness[neigh].clip(min=0)
         # if p.sum() == 0:
         #     p = None

@@ -20,8 +20,8 @@ class Population(nx.Graph):
 
     def __init__(self, graph, copy=True):
         """
-        :param graph: file
-        :param copy:
+        :param graph: file|networkx.Graph|
+        :param copy: copy(True) or replace(False)
         """
         if isinstance(graph, nx.Graph):
             if copy:
@@ -59,17 +59,17 @@ class Population(nx.Graph):
         return degree_list
 
     def rbind_game(self, game):
-        # 两种策略: 0合作，1背叛
+        # Two strategies: 0-Cooperate, 1-Betray
         self.strategy = np.random.randint(game.order, size=self.size)
-        # 初始合作率
+        # Initial Cooperate ratio
         # count_nonzero() is faster than (self.strategy==0).sum()
         # see test.py test_count_zero()
         self.rate = self.size - np.count_nonzero(self.strategy)
 
     def rbind_adapter(self, adapter):
-        # 共演策略，见adapter.py
+        # coevolution dynamic, see adapter.py
         self.dynamic = np.random.randint(adapter.category, size=self.size)
-        # 初始策略分布
+        # initial distribution
         self.distr = [(self.dynamic==m).sum() for m in xrange(adapter.category)]
 
     def cooperate(self, increase):
@@ -112,7 +112,7 @@ class Population(nx.Graph):
         return self[node].keys()+[node]
 
     def rewire(self, u, v, w):
-        # check if node/edge exist before call
+        # TODO: check if node/edge exist
         self.remove_edge(u, v)
         self.degree_list[v] -= 1
         self.add_edge(u, w)
@@ -141,7 +141,7 @@ class Population(nx.Graph):
         return birth, death
 
     def load_graph(self, path, delimiter=None, fmt='edge', nodetype=int, data=False):
-        # load graph data file, must
+        # load graph data file
         full_path = os.path.dirname(os.path.realpath(__file__)) + path
         if 'edge' == fmt: # edge_list
             nx.read_edgelist(full_path, create_using=self, delimiter=delimiter, nodetype=nodetype, data=data)
@@ -192,6 +192,8 @@ class Population(nx.Graph):
         # plt.xlim(0, 1000)
         # plt.xlim((1e-1, 1e5))
         # plt.ylim((.9, 1e4))
+        # plt.xlim(1, max_x)
+        # plt.ylim(1, max_y)
 
         plt.xlabel('Degree')
         plt.ylabel('Frequency')

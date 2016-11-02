@@ -27,16 +27,23 @@ class Game(object):
             self.entire_play()
         else:
             self.fast_play(node, rewire)
+            # self.fast_play2(node)
 
     # 计算所有节点的fitness，必须被继承
     def entire_play(self):
-        raise NotImplementedError("Game.entire_play() Should have implemented!")
+        raise NotImplementedError("Game.entire_play() Should be implemented!")
 
     # 计算少数节点引起的变化，必须被继承
     def fast_play(self, node, rewire=None):
         # 会有精度差别 10^-16~-15数量级
-        # todo : 一定循环之后整体计算进行修正
-        raise NotImplementedError("Game.fast_play() Should have implemented!")
+        raise NotImplementedError("Game.fast_play() Should be implemented!")
+        
+    def fast_play2(self, nodes=None):
+        '''
+        nodes contain all nodes whose strategy or structure changed(no matter initiative or passive)
+        partly play nodes and their neighboors
+        '''
+        raise NotImplementedError("Game.fast_play2() should be implemented!")
 
     def acc_error(self, node, rewire):
         self.fast_play(node, rewire)
@@ -46,7 +53,7 @@ class Game(object):
 
 
 class PGG(Game):
-    """public_goods_game"""
+    """public_goods_game 第一种 每个group投入1"""
 
     def __init__(self, r=2, fixed=False):
         super(PGG, self).__init__()
@@ -57,7 +64,7 @@ class PGG(Game):
     def entire_play(self):
         self.fitness.fill(0)
         degree_array = np.array(self.population.degree_list)
-        # 第一种每个group投入1
+        # 每个group投入1
         for node in self.population.nodes_iter():
             degree = degree_array[node]
             self.fitness[node] += (self.strategy[node]-1) * (degree+1)
@@ -99,14 +106,17 @@ class PGG(Game):
             for neigh_neigh in self.population.neighbors_iter(neigh):
                 self.fitness[neigh_neigh] += delta_neigh
 
+    def fast_play2(self, nodes):
+        pass
+
 
 class PGG2(PGG):
-    """pgg 2"""
+    """pgg 第二种 每个group投入1/(k+1)"""
 
     def entire_play(self):
         self.fitness.fill(0)
         degree_array = np.array(self.population.degree_list)
-        # 第二种每个group投入1/(k+1)
+        # 每个group投入1/(k+1)
         inv = (1.0-self.strategy) / (degree_array+1)
         for node in G.nodes_iter():
             self.fitness[node] += self.strategy[node] - 1
@@ -181,6 +191,9 @@ class PDG(Game):
                 old_p = self.payoff[s_][self.strategy[neigh]]
                 self.fitness[neigh] += new_p[1]-old_p[1]
         self.fitness[node] = p
+        
+    def fast_play2(self, node, others):
+        pass
 
 
 class RPG(Game):

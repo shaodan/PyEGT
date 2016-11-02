@@ -18,7 +18,7 @@ import adapter
 # G = nx.convert_node_labels_to_integers(nx.grid_2d_graph(10,10))
 # G = nx.star_graph(10)
 # G = nx.random_graphs.watts_strogatz_graph(1000, 4, 0.3)
-G = nx.random_graphs.barabasi_albert_graph(500, 4, 10)
+G = nx.random_graphs.barabasi_albert_graph(1000, 4, 10)
 # G = nx.random_graphs.powerlaw_cluster_graph(1000, 10, 0.2)
 # G = nx.convert_node_labels_to_integers(nx.davis_southern_women_graph())
 # G = ["/../../DataSet/ASU/Douban-dataset/data/edges.csv", ',']
@@ -43,19 +43,24 @@ e = Evolution(G, g, u, has_mut=True)
 # a = adapter.Preference(3)
 # e = CoEvolution(G, g, u, a, has_mut=False)
 
-e.evolve(20000)
+e.evolve(500000)
 e.show()
-# e.degree_distribution()
 
 # 分析节点最终fit和结构参数的关系
-# e.degree_distribution()
+e.show_degree()
+# p.degree_distribution()
 
 
 # 重复实验，得到关系图
 def repeat(times):
     a = [0] * times
     for i in xrange(100):
-        e.evolve(20000)
-        print(i)
+        e.evolve(20000, restart=True)
+        # if e is CoEvolution, population need re-copy
         a[i] = e.cooperate[-1]
+        print 'turn %d' % i
     plt.plot(a, 'r-')
+    plt.show()
+    
+def repeat2():
+    pass

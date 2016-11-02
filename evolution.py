@@ -60,10 +60,11 @@ class Evolution(object):
         self.cooperate[i] = self.population.cooperate(increase)
         return increase, mutate
 
-    def evolve(self, turns, profile=None):
-        self.death = None
-        self.rewired = None
-        self.cooperate = [0] * turns
+    def evolve(self, turns, profile=None, restart=False):
+        if (not hasattr(self, 'death')) or restart:
+            self.death = None
+            self.rewired = None
+            self.cooperate = [0] * turns
 
         if profile is None:
             profile = turns/10
@@ -74,6 +75,7 @@ class Evolution(object):
             self.gen += 1
             if self.gen % profile == 0:
                 print('turn: %d/%d'%(self.gen, turns))
+                # 精度修正 accuracy correction
                 print(self.death, self.rewired, ' error:', self.game.acc_error(self.death, self.rewired))
                 self.death = -1
                 self.rewired = None
@@ -118,7 +120,7 @@ class Evolution(object):
         path = os.path.dirname(os.path.realpath(__file__)) + time
         if not os.path.exists(path):
             os.makedirs(path)
-        self.save_pajek(path)
+        nx.write_pajek(self.population, path+'/graph.net')
         sio.savemat(path+'/data.mat', mdict={'gen': self.gen,
                                              'fit': self.population.fitness,
                                              'stg': self.population.strategy,
@@ -126,7 +128,7 @@ class Evolution(object):
 
     # 读取演化结果
     def load(self, path):
-        self.load_pajek(path)
+        self.population = nx.read_pajek(path+'/graph.net')
         mat = sio.loadmat(path+'/data.mat', mdict={'gen': self.gen,
                                                    'fit': self.population.fitness,
                                                    'stg': self.population.strategy,
@@ -134,12 +136,6 @@ class Evolution(object):
         self.population.fitness = mat['fitness']
         self.population.strategy = mat['strategy']
         self.cooperate = mat['log']
-
-    def save_pajek(self, path):
-        nx.write_pajek(self.population, path+'/graph.net')
-
-    def load_pajek(self, path):
-        self.population = nx.read_pajek(path+'/graph.net')
 
 
 class StaticStrategy(Evolution):
