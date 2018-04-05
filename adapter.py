@@ -3,36 +3,30 @@
 # -*-  2015.07.11 -*-
 
 import numpy as np
-import networkx as nx
-from population import Population
 
 
 class Adapter(object):
-    def __init__(self, category, mindegree=1):
-        self.category = category
-        self.min_degree = mindegree
-        self.category_words = ['Random', 'Popularity', 'KNN', 'Pop*Sim', 'Similarity']
 
-    def bind(self, population):
-        population.rbind_adapter(self)
-        self.population = population
-        self.dynamic = population.dynamic
+    def __init__(self, category=3):
+        self.category = category
+        self.category_words = ['Random', 'Popularity', 'CNN', 'Pop*Sim', 'Similarity']
+        self.population = None
+
+    def bind(self, p):
+        self.population = p
         return self
 
-    # prefer优先策略，anchor重连节点, source?
-    def adapt(self, anchor, source=None):
-        raise NotImplementedError("Game.init_play() Should be implemented!")
+    def adapt(self, anchor):
+        raise NotImplementedError("Adapter.adapt")
 
 
 class LocalAdapter(Adapter):
-
+    """ Local Adaptor, only choice in local area(distance < d_max) """
     def adapt(self, anchor, source=None):
-        size = self.population.size
-        prefer = self.dynamic[anchor]
+        prefer = self.population.dynamic[anchor]
         if anchor is None or source is None:
             return None
         alter = self.population.neighbors_of_neighbors(source)
-        new = None
         if prefer == 0:
             new = np.random.choice(alter)
         elif prefer == 1:
@@ -44,67 +38,90 @@ class LocalAdapter(Adapter):
 
 
 class GlobalAdapter(Adapter):
-
+    """ Global Adapter """
     def adapt(self, anchor, source=None):
         pass
 
 
 class Preference(Adapter):
-
-    def __init__(self, category=4):
-        super(self.__class__, self).__init__(category)
-
-    def adapt(self, anchor, source=None):
-        population = self.population
-        prefer = self.dynamic[anchor]
+    """ Preference Adaptor """
+    def adapt(self, anchor):
+        prefer = self.population.dynamic[anchor]
         if anchor is None:
             return None
         if prefer == 1:  # 度优先
-            p = np.array(population.degree_list, dtype=np.float64)
+            p = np.array(self.population.degree_cache, dtype=np.float64)
         elif prefer == 2:  # 相似度
-            p = np.array([len(list(nx.common_neighbors(population, anchor, x))) for x in population.nodes_iter()],
-                         dtype=np.float64)
-            p += 1         # 防止没有足够公共节点的
+            p = np.array(self.population.number_of_cn(anchor), dtype=np.float64)
+            p += 1  # 防止没有足够公共节点的
         else:
             p = None
         p[anchor] = 0
         p /= float(p.sum())
-        old = np.random.choice(population.neighbors(anchor))
-        new = np.random.choice(population.size, replace=False, p=p)
-        population.remove_edge(anchor, old)
-        population.add_edge(anchor, new)
-        return old, new
+        new = np.random.choice(len(self.population), replace=False, p=p)
+        old = self.population.rewire(anchor, new)
+        return 0, 0 if old < 0 else old, new
 
     def adapt_once(self, anchor):
         # rewire only one link
-        population = self.population
-        prefer = self.dynamic[anchor]
-        old = population.random_neighbor(anchor)
-        if population.degree_list[old] <= self.min_degree:
-            print "=======skip rewire(%d) neigh(%d) min degree===="%(anchor, old)
-            return 0, 0
-        new_list = population.nodes_exclude_neighbors(anchor)
+        prefer = self.population.dynamic[anchor]
+        new_list = self.population.nodes_nonadjacent(anchor)
         if prefer == 1:
-            p = np.array([population.degree_list[x] for x in new_list], dtype=np.float64)
+            p = np.array(self.population.degree_cache[new_list], dtype=np.float64)
         elif prefer == 2:
-            p = np.array([len(list(nx.common_neighbors(population, anchor, x))) for x in new_list], dtype=np.float64)
-            # p += 1       # 防止没有足够公共节点的
+            p = np.array(self.population.number_of_cn(anchor, new_list), dtype=np.float64)
+            # p += 1  # 防止没有足够公共节点的
             if p.sum() == 0:
                 p = None
         else:
             p = None
         if p is not None:
             p /= float(p.sum())
-        new = int(np.random.choice(new_list, p=p))
-        population.rewire(anchor, old, new)
+        new = np.random.choice(new_list, p=p)
+        old = self.population.rewire(anchor, new)
+        return None if old < 0 else old, new
+
+    def adapt2(self, anchor, ma=None):
+        # prefer = self.dynamic[anchor]
+        # new = [self.rd, self.pa, self.cnn][prefer](anchor)
+        new = self.lb(ma)
+        old = self.population.rewire(anchor, new)
         return old, new
+
+    def lb(self, ma):
+        # todo learn best
+        new = self.population.long_tie[ma]
+        return new
+
+    def rd(self, n):
+        # random
+        new = np.random.randint(len(self.population))
+        if self.population.has_edge(n, new):
+            new = np.random.randint(len(self.population))
+        return new
+
+    def pa(self, n):
+        # degree
+        # p = np.array(self.population.degree_cache, dtype=np.float64)
+        # p /= float(p.sum())
+        # return np.random.choice(len(self.population), p=p)
+        u, v = self.population.random_edge()
+        return np.random.choice((u, v))
+
+    def cnn(self, n):
+        # common neighbors
+        nn = self.population.random_neighbor(n)
+        new = self.population.random_neighbor(nn)
+        return new
 
 
 if __name__ == '__main__':
+    import networkx as nx
+    import population as pp
     G = nx.random_regular_graph(5, 100)
-    P = Population(G)
-    P.fitness = np.random.randint(1, 3, size=100) * 1.0
-    p = Preference().bind(P)
-    print P.edges(1)
-    p.adapt_once(1)
-    print P.edges(1)
+    DP = pp.DynamicPopulation(G)
+    DP.fitness = np.random.randint(1, 3, size=100) * 1.0
+    pp = Preference().bind(DP)
+    print(DP.edges(1))
+    pp.adapt_once(1)
+    print(DP.edges(1))

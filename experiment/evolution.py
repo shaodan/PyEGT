@@ -14,6 +14,24 @@ import game
 import adapter
 
 
+class EvolutionState(object):
+    def __int__(self):
+        self.gen = 0
+        self.birth = None
+        self.death = None
+        self.mut = False
+
+        self.fitness = None
+        self.strategy = None
+
+
+class CoEvolutionState(EvolutionState):
+    def __int__(self):
+        super(self.__class__, self).__init__()
+        self.rewire = None
+        self.dynamic = None
+
+
 class Evolution(object):
     """ Evolutionary Game agent-based Simulation """
     def __init__(self, has_mut=True):
@@ -30,6 +48,11 @@ class Evolution(object):
 
         self.death = None
         self.rewire = None
+
+    def init_state(self):
+        self.es = EvolutionState()
+        if self.population is not None:
+            pass
 
     def set_population(self, p):
         assert isinstance(p, Population)
@@ -51,10 +74,7 @@ class Evolution(object):
         self.game.bind(self.population)
         self.rule.bind(self.population)
 
-    def ready(self):
-        self.bind_process()
-
-    def next_generation(self, i):
+    def next_generation(self):
         self.game.play(self.death, self.rewire)
         birth, death = self.rule.update()
 
@@ -72,53 +92,57 @@ class Evolution(object):
             increase = 1-new_s*2
 
         self.death = death
-        return increase, mutate
+        return mutate
 
-    def evolve(self, turns, profile=None, restart=True, quiet=False, autostop=True):
+    def prepare(self, turns, sampling):
+        self.gen = 0
+        self.death = None
+        self.rewire = None
+
+        # todo 全部记录
+        if sampling <= 0 or turns <= sampling:
+            period = 1
+        else:
+            period = turns / sampling
+        # x = np.linspace(0, turns, sampling + 1, dtype=int)
+        # x[-1] = turns - 1
+        # y = self.cooperate[x]
+        self.cooperate = []
+        return period
+
+    def record(self, cop):
+        self.cooperate.append((self.gen, cop))
+
+    def evolve(self, turns, sampling=20, quiet=False, autostop=True):
         # self.bind_process()
-        self.ready()
+        period = self.prepare(turns, sampling)
         start_time = datetime.datetime.now()
-        if restart:
-            self.gen = 0
-            self.death = None
-            self.rewire = None
-            self.cooperate = np.zeros(turns, dtype=int)
-
-        if profile is None:
-            profile = turns/10
-            if profile < 1:
-                profile = 10
 
         # fig, axes = plt.subplots(2, 5, subplot_kw={'xticks': [], 'yticks': []})
         # j = 0
-
         for i in xrange(turns):
             self.gen += 1
-            if self.gen % profile == 0:
-                if not quiet:
-                    print('turn: %d/%d' % (self.gen, turns))
-                period = min(profile, 500)
-                delta = self.cooperate[i-period]-self.cooperate[i-1]
+            if self.gen % period == 0:
+                delta = self.cooperate[-1]-self.cooperate[-2]
                 if autostop and self.time_to_stop(delta):
                     print("stop at turn: %d, delta: %d" % (self.gen, delta))
                     break
                 # 精度修正 accuracy correction
                 err = self.game.correct_error(self.death, self.rewire)
+                # self.population.check_cache()                if not quiet:
+                print('turn: %d/%d' % (self.gen, turns))
+                print(self.death, self.rewire, ' error:', err, ' delta:', delta)
+                self.death, self.rewire = -1, None
 
                 # grid = self.population.dynamics.reshape((30, -1))
                 # fig.subplots_adjust(hspace=0.3, wspace=0.05)
                 # ax = axes.flat[j]
                 # im = ax.imshow(grid, interpolation='nearest')
-                # ax.set_title("Generation %d" % i)
+                # ax.set_title("Generation %d" % self.gen)
                 # j += 1
 
-                # self.population.check_cache()
-                if not quiet:
-                    print(self.death, self.rewire, ' error:', err, ' delta:', delta)
-                self.death, self.rewire = -1, None
-            inc, _ = self.next_generation(i)
-            self.cooperate[i] = self.population.cooperate(inc)
-
+            inc, _ = self.next_generation()
+            self.record()
             if inc == 0:
                 self.death = -1
         end_time = datetime.datetime.now()
@@ -215,28 +239,6 @@ class StaticStrategyEvolution(Evolution):
         super(self.__class__, self).evolve(turns, **kwargs)
 
     def next_generation(self, i):
-        self.game.entire_play()
-        bdpairs = self.rule.update_all()
-        # todo 策略如果进行突变会怎么样
-        # if self.has_mut and np.random.random() <= 0.01:
-        #     new_d = np.random.randint(self.adapter.category)
-        #     mutate = True
-        # else:
-        mutate = False
-        # todo 无论是否更新，都重连？
-        # if birth == death:
-        #     return 0, False
-
-        # todo 无论有没有改变，都进行重连
-        for birth, death in bdpairs:
-            # print birth, death
-            new_d = self.population.dynamics[birth]
-            self.population.dynamics[death] = new_d
-            old, new = self.adapter.adapt2(death, birth)
-        self.prefer[i] = self.population.prefer()
-        return 0, mutate
-
-    def next_generation0(self, i):
         if i == 0:
             self.game.entire_play()
         else:
@@ -249,11 +251,9 @@ class StaticStrategyEvolution(Evolution):
         # else:
         new_d = self.population.dynamics[birth]
         mutate = False
-
         # todo 无论是否更新，都重连？
         # if birth == death:
         #     return 0, False
-
         # todo 无论有没有改变，都进行重连
         old_d = self.population.dynamics[death]
         if new_d == old_d:
@@ -297,7 +297,8 @@ class CoEvolution(Evolution):
 
     def set_adapter(self, a):
         assert(isinstance(a, adapter.Adapter))
-        self.adapter = a.bind(self.population)
+        self.adapter = a
+        # a.bind(self.population)
 
     def next_generation(self, i):
         inc, mutate = super(self.__class__, self).next_generation(i)
